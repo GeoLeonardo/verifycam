@@ -1,5 +1,5 @@
 {
-  "SECRET_KEY": "MY_SECRET_KEY_2024",
-  "CLIENT_ID":  "CLIENT_001",
+  "SECRET_KEY": "MY_SECRET_KEY",
+  "CLIENT_ID":  "Иванов_Иван_Иванович",
   "VER":        "3.0"
 }
