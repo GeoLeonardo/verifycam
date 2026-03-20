@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Проверка QR — ВерифиКам</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a0f;color:#e2e8f0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;padding:20px 16px 48px}
+.wrap{max-width:680px;margin:0 auto}
+.hdr{text-align:center;margin-bottom:24px}
+.hdr-ico{font-size:44px;margin-bottom:10px}
+.hdr h1{font-size:20px;font-weight:700;color:#fff;margin-bottom:4px}
+.hdr p{font-size:12px;color:rgba(255,255,255,.4)}
+
+/* KEY */
+.key-row{display:flex;gap:10px;margin-bottom:18px;align-items:flex-end}
+.key-wrap{flex:1}
+.key-lbl{font-size:11px;font-weight:600;color:#f5c518;letter-spacing:.08em;margin-bottom:6px}
+.key-inp{width:100%;background:rgba(0,0,0,.4);border:1px solid rgba(245,197,24,.25);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:monospace;outline:none}
+.key-inp:focus{border-color:rgba(245,197,24,.6)}
+.key-load{padding:10px 14px;background:rgba(245,197,24,.1);border:1px solid rgba(245,197,24,.25);border-radius:8px;color:#f5c518;font-size:12px;cursor:pointer;white-space:nowrap}
+.key-load:hover{background:rgba(245,197,24,.2)}
+
+/* TABS */
+.tabs{display:flex;background:rgba(255,255,255,.05);border-radius:10px;padding:4px;margin-bottom:18px;gap:4px}
+.tab{flex:1;padding:9px;border-radius:7px;font-size:12px;font-weight:600;text-align:center;cursor:pointer;color:rgba(255,255,255,.4);border:none;background:none;transition:all .2s}
+.tab.active{background:rgba(255,255,255,.1);color:#fff}
+.panel{display:none}.panel.active{display:block}
+
+/* BOX */
+.box{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px;margin-bottom:14px}
+.box-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;margin-bottom:10px}
+
+/* DROP ZONE */
+.drop{width:100%;min-height:110px;background:rgba(0,0,0,.4);border:2px dashed rgba(255,255,255,.15);border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;padding:16px;transition:border-color .2s;text-align:center}
+.drop:hover,.drop.over{border-color:rgba(245,197,24,.5);background:rgba(245,197,24,.03)}
+.drop-ico{font-size:28px;opacity:.4}
+.drop-txt{font-size:13px;color:rgba(255,255,255,.4)}
+.drop-hint{font-size:11px;color:rgba(255,255,255,.25)}
+
+/* BATCH LIST */
+.batch-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.batch-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 14px;display:flex;align-items:center;gap:10px}
+.bi-thumb{width:44px;height:44px;border-radius:6px;object-fit:cover;flex-shrink:0;background:#111}
+.bi-info{flex:1;min-width:0}
+.bi-name{font-size:12px;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bi-status{font-size:11px;margin-top:2px}
+.bi-status.pending{color:rgba(255,255,255,.3)}
+.bi-status.ok{color:#4ade80}
+.bi-status.fail{color:#f87171}
+.bi-status.checking{color:#fbbf24}
+.bi-icon{font-size:20px;flex-shrink:0}
+.bi-remove{background:none;border:none;color:rgba(255,255,255,.2);font-size:16px;cursor:pointer;flex-shrink:0;padding:2px 6px}
+.bi-remove:hover{color:#f87171}
+
+/* SINGLE SCAN */
+.ta{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:11px 14px;color:#fff;font-size:13px;font-family:monospace;outline:none;min-height:72px;resize:vertical}
+.ta:focus{border-color:rgba(245,197,24,.5)}
+.inp{width:100%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 14px;color:#fff;font-size:13px;font-family:monospace;outline:none}
+.inp:focus{border-color:rgba(245,197,24,.5)}
+.fg{margin-bottom:12px}
+.fg-lbl{font-size:11px;font-weight:600;color:rgba(255,255,255,.5);letter-spacing:.08em;margin-bottom:5px;display:block}
+.fg-hint{font-size:11px;color:rgba(255,255,255,.3);margin-top:4px}
+
+/* BUTTONS */
+.btn-v{width:100%;padding:15px;background:#f5c518;border:none;border-radius:12px;color:#000;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s,transform .09s}
+.btn-v:active{background:#d4a800;transform:scale(.98)}
+.btn-v:disabled{background:rgba(255,255,255,.15);color:rgba(255,255,255,.3);cursor:not-allowed}
+.btn-sm{padding:8px 14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#fff;font-size:12px;cursor:pointer}
+.btn-sm:hover{background:rgba(255,255,255,.12)}
+.btn-cam{width:100%;padding:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:12px;cursor:pointer;margin-top:10px}
+.btn-cam:hover{background:rgba(255,255,255,.12)}
+
+/* CAM SCANNER */
+#vid-wrap{display:none;border-radius:10px;overflow:hidden;margin-top:10px;position:relative}
+#qvid{width:100%;border-radius:10px;display:block}
+.cross{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.cross-box{width:160px;height:160px;border:2px solid #f5c518;border-radius:8px;box-shadow:0 0 0 9999px rgba(0,0,0,.45)}
+
+/* SINGLE RESULT */
+.result{margin-top:16px;border-radius:12px;padding:18px;display:none}
+.result.show{display:block}
+.result.ok{background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.3)}
+.result.fail{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.3)}
+.r-ico{font-size:32px;margin-bottom:8px}
+.r-ttl{font-size:16px;font-weight:700;margin-bottom:12px}
+.result.ok .r-ttl{color:#4ade80}
+.result.fail .r-ttl{color:#f87171}
+.r-rows{display:flex;flex-direction:column}
+.r-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);gap:12px}
+.r-row:last-child{border-bottom:none}
+.rk{font-size:11px;color:rgba(255,255,255,.45);letter-spacing:.06em;white-space:nowrap;flex-shrink:0}
+.rv{font-size:12px;color:#fff;text-align:right;word-break:break-all;font-family:monospace}
+.sig-box{background:rgba(0,0,0,.3);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:11px;font-family:monospace}
+.sline{margin-bottom:4px;color:rgba(255,255,255,.5)}
+.sline span{color:#fff}
+.sline.ok span{color:#4ade80}
+.sline.fail span{color:#f87171}
+.payload-hint{margin-top:6px;font-size:10px;color:rgba(255,255,255,.25);word-break:break-all}
+
+/* BATCH SUMMARY */
+.batch-summary{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;margin-top:14px;display:none}
+.batch-summary.show{display:block}
+.bs-title{font-size:14px;font-weight:700;color:#fff;margin-bottom:12px}
+.bs-stats{display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.bs-stat{flex:1;min-width:80px;background:rgba(255,255,255,.04);border-radius:8px;padding:10px 12px;text-align:center}
+.bs-stat-n{font-size:22px;font-weight:700}
+.bs-stat-l{font-size:11px;color:rgba(255,255,255,.45);margin-top:2px}
+.bs-stat.ok .bs-stat-n{color:#4ade80}
+.bs-stat.fail .bs-stat-n{color:#f87171}
+.bs-stat.total .bs-stat-n{color:#fff}
+.bs-rows{display:flex;flex-direction:column;gap:6px}
+.bs-row{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.03);border-radius:8px;padding:8px 12px}
+.bs-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.bs-dot.ok{background:#4ade80;box-shadow:0 0 5px #4ade80}
+.bs-dot.fail{background:#f87171;box-shadow:0 0 5px #f87171}
+.bs-name{font-size:12px;color:rgba(255,255,255,.7);flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bs-id{font-size:11px;color:rgba(255,255,255,.4);font-family:monospace}
+.bs-res{font-size:11px;margin-left:auto;flex-shrink:0}
+.bs-res.ok{color:#4ade80}
+.bs-res.fail{color:#f87171}
+.btn-export{padding:10px 16px;background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.25);border-radius:8px;color:#4ade80;font-size:12px;cursor:pointer;margin-top:12px}
+.btn-export:hover{background:rgba(74,222,128,.2)}
+
+/* HISTORY */
+.hist-list{display:flex;flex-direction:column;gap:8px}
+.h-item{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.h-item:hover{background:rgba(255,255,255,.08)}
+.h-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.h-dot.ok{background:#4ade80;box-shadow:0 0 5px #4ade80}
+.h-dot.fail{background:#f87171;box-shadow:0 0 5px #f87171}
+.h-info{flex:1;min-width:0}
+.h-id{font-size:12px;font-weight:600;color:#fff}
+.h-date{font-size:11px;color:rgba(255,255,255,.4)}
+.h-empty{text-align:center;color:rgba(255,255,255,.3);font-size:13px;padding:32px}
+.btn-clr{width:100%;padding:10px;background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);border-radius:8px;color:#f87171;font-size:12px;cursor:pointer;margin-top:10px}
+
+.progress-bar{height:3px;background:rgba(255,255,255,.08);border-radius:99px;margin-bottom:14px;overflow:hidden;display:none}
+.progress-bar.show{display:block}
+.progress-fill{height:100%;background:#f5c518;border-radius:99px;transition:width .3s;width:0%}
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:rgba(15,15,15,.97);color:#fff;font-size:13px;font-weight:500;padding:10px 18px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;border:1px solid rgba(255,255,255,.1);white-space:nowrap;z-index:100}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+
+<script>
+// ════════════════════════════════════════
+//  ТРАНСЛИТЕРАЦИЯ — точно как в приложении
+// ════════════════════════════════════════
+const TR={'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'YO','Ж':'ZH','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'KH','Ц':'TS','Ч':'CH','Ш':'SH','Щ':'SCH','Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'YU','Я':'YA','а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+function translit(s){return s.split('').map(c=>TR[c]!==undefined?TR[c]:c).join('');}
+</script>
+
+<div class="wrap">
+  <div class="hdr">
+    <div class="hdr-ico">🔐</div>
+    <h1>Проверка верификации</h1>
+    <p>Одиночная и групповая проверка QR-кодов</p>
+  </div>
+
+  <!-- КЛЮЧ -->
+  <div class="key-row">
+    <div class="key-wrap">
+      <div class="key-lbl">🔑 СЕКРЕТНЫЙ КЛЮЧ</div>
+      <input class="key-inp" id="key" type="password" placeholder="Секретный ключ…" autocomplete="off">
+    </div>
+    <button class="key-load" onclick="loadConfig()" title="Загрузить из config.json">⬇ config.json</button>
+  </div>
+
+  <!-- ВКЛАДКИ -->
+  <div class="tabs">
+    <button class="tab active" onclick="tab('batch')">📦 Групповая</button>
+    <button class="tab" onclick="tab('single')">🔍 Одиночная</button>
+    <button class="tab" onclick="tab('hist')">📋 История</button>
+  </div>
+
+  <!-- ══ ГРУППОВАЯ ПРОВЕРКА ══ -->
+  <div class="panel active" id="panel-batch">
+
+    <div class="box">
+      <div class="box-lbl">ДОБАВЬТЕ ФОТО С QR-КОДАМИ</div>
+      <div class="drop" id="batch-drop"
+        onclick="document.getElementById('batch-files').click()">
+        <div class="drop-ico">📁</div>
+        <div class="drop-txt">Нажмите или перетащите несколько фото</div>
+        <div class="drop-hint">Поддерживается JPG, PNG — любое количество</div>
+      </div>
+      <input type="file" id="batch-files" accept="image/*" multiple style="display:none" onchange="onBatchFiles(event)">
+    </div>
+
+    <div class="progress-bar" id="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+
+    <div class="batch-list" id="batch-list"></div>
+
+    <div style="display:flex;gap:8px;margin-bottom:14px" id="batch-actions" style="display:none">
+      <button class="btn-sm" onclick="clearBatch()">🗑 Очистить</button>
+      <button class="btn-sm" onclick="document.getElementById('batch-files').click()">➕ Добавить ещё</button>
+    </div>
+
+    <button class="btn-v" id="btn-batch" onclick="runBatch()" disabled>🔍 Проверить все</button>
+
+    <!-- ИТОГ ГРУППОВОЙ ПРОВЕРКИ -->
+    <div class="batch-summary" id="batch-summary">
+      <div class="bs-title">Результаты проверки</div>
+      <div class="bs-stats">
+        <div class="bs-stat total"><div class="bs-stat-n" id="bs-total">0</div><div class="bs-stat-l">Всего</div></div>
+        <div class="bs-stat ok"><div class="bs-stat-n" id="bs-ok">0</div><div class="bs-stat-l">✅ Подлинных</div></div>
+        <div class="bs-stat fail"><div class="bs-stat-n" id="bs-fail">0</div><div class="bs-stat-l">❌ Ошибок</div></div>
+      </div>
+      <div class="bs-rows" id="bs-rows"></div>
+      <button class="btn-export" onclick="exportReport()">📄 Экспорт отчёта CSV</button>
+    </div>
+  </div>
+
+  <!-- ══ ОДИНОЧНАЯ ПРОВЕРКА ══ -->
+  <div class="panel" id="panel-single">
+
+    <div class="box">
+      <div class="box-lbl">ЗАГРУЗИТЬ ФОТО С QR</div>
+      <div class="drop" id="single-drop" onclick="document.getElementById('single-file').click()">
+        <div class="drop-ico" id="sd-ico">🖼</div>
+        <div class="drop-txt" id="sd-txt">Нажмите или перетащите фото</div>
+      </div>
+      <input type="file" id="single-file" accept="image/*" style="display:none" onchange="onSingleFile(event)">
+    </div>
+
+    <button class="btn-cam" id="btn-cam" onclick="toggleCam()">📷 Сканировать QR камерой</button>
+    <div id="vid-wrap"><video id="qvid" autoplay playsinline muted></video><div class="cross"><div class="cross-box"></div></div></div>
+
+    <div class="box" style="margin-top:12px">
+      <div class="box-lbl">ИЛИ ВСТАВЬТЕ ТЕКСТ QR</div>
+      <textarea class="ta" id="qr-raw" placeholder="ID|ДАТА|GPS|ПОДПИСЬ|ВЕРСИЯ" oninput="onRaw(this.value)"></textarea>
+      <div class="fg-hint">Отсканируйте QR любым сканером → скопируйте → вставьте</div>
+    </div>
+
+    <button class="btn-v" id="btn-sv" onclick="verifySingle()" disabled>🔍 Проверить</button>
+
+    <div class="result" id="result">
+      <div class="r-ico" id="r-ico"></div>
+      <div class="r-ttl" id="r-ttl"></div>
+      <div class="r-rows" id="r-rows"></div>
+      <div class="sig-box" id="r-sig"></div>
+    </div>
+  </div>
+
+  <!-- ИСТОРИЯ -->
+  <div class="panel" id="panel-hist">
+    <div class="hist-list" id="hist-list"><div class="h-empty">История проверок пуста</div></div>
+    <button class="btn-clr" onclick="clrHist()">🗑 Очистить</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+
+<script>
+// ══════════════════════════════════════
+//  ЗАГРУЗКА КЛЮЧА ИЗ CONFIG.JSON
+// ══════════════════════════════════════
+async function loadConfig(){
+  try{
+    const r=await fetch('config.json?_='+Date.now());
+    if(!r.ok)throw new Error('not found');
+    const j=await r.json();
+    if(j.SECRET_KEY){document.getElementById('key').value=j.SECRET_KEY;showToast('✓ Ключ загружен из config.json');}
+    else showToast('config.json не содержит SECRET_KEY','err');
+  }catch(e){showToast('config.json не найден или недоступен','err');}
+}
+// Пробуем загрузить автоматически при старте
+loadConfig().catch(()=>{});
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let scanRaw='', camStream=null, camTmr=null;
+let batchItems=[]; // {file, name, thumb, status, result}
+let batchResults=[]; // для экспорта
+
+// ══════════════════════════════════════
+//  ВКЛАДКИ
+// ══════════════════════════════════════
+function tab(t){
+  ['batch','single','hist'].forEach((x,i)=>{
+    document.querySelectorAll('.tab')[i].classList.toggle('active',x===t);
+    document.getElementById('panel-'+x).classList.toggle('active',x===t);
+  });
+  if(t==='hist')renderHist();
+  if(t!=='single')stopCam();
+}
+
+// ══════════════════════════════════════
+//  ГРУППОВАЯ ПРОВЕРКА
+// ══════════════════════════════════════
+const batchDrop=document.getElementById('batch-drop');
+batchDrop.addEventListener('dragover',e=>{e.preventDefault();batchDrop.classList.add('over');});
+batchDrop.addEventListener('dragleave',()=>batchDrop.classList.remove('over'));
+batchDrop.addEventListener('drop',e=>{e.preventDefault();batchDrop.classList.remove('over');addBatchFiles(e.dataTransfer.files);});
+
+function onBatchFiles(e){addBatchFiles(e.target.files);e.target.value='';}
+
+function addBatchFiles(files){
+  for(const f of files){
+    if(!f.type.startsWith('image/'))continue;
+    batchItems.push({file:f,name:f.name,status:'pending',result:null});
+  }
+  renderBatchList();
+  document.getElementById('btn-batch').disabled = batchItems.length===0;
+  if(batchItems.length>0) document.getElementById('batch-actions').style.display='flex';
+}
+
+function renderBatchList(){
+  const list=document.getElementById('batch-list');
+  if(!batchItems.length){list.innerHTML='';return;}
+  list.innerHTML=batchItems.map((item,i)=>{
+    const ico = item.status==='ok'?'✅':item.status==='fail'?'❌':item.status==='checking'?'⏳':'⬜';
+    const stClass = item.status==='ok'?'ok':item.status==='fail'?'fail':item.status==='checking'?'checking':'pending';
+    const stTxt = item.status==='ok'?('✓ '+item.result?.id+' — ПОДЛИННОЕ'):
+                  item.status==='fail'?('✗ '+(item.result?.reason||'Ошибка')):
+                  item.status==='checking'?'Проверяю…':'Ожидает проверки';
+    return `<div class="batch-item" id="bi-${i}">
+      <img class="bi-thumb" id="bi-thumb-${i}" src="" alt="">
+      <div class="bi-info">
+        <div class="bi-name">${item.name}</div>
+        <div class="bi-status ${stClass}" id="bi-st-${i}">${stTxt}</div>
+      </div>
+      <span class="bi-icon" id="bi-ico-${i}">${ico}</span>
+      <button class="bi-remove" onclick="removeBatch(${i})" title="Удалить">✕</button>
+    </div>`;
+  }).join('');
+  // Загружаем превью
+  batchItems.forEach((item,i)=>{
+    const img=document.getElementById('bi-thumb-'+i);
+    if(img&&!img.src.startsWith('data')){
+      const rd=new FileReader();rd.onload=e=>img.src=e.target.result;rd.readAsDataURL(item.file);
+    }
+  });
+}
+
+function removeBatch(i){batchItems.splice(i,1);renderBatchList();if(!batchItems.length){document.getElementById('btn-batch').disabled=true;document.getElementById('batch-actions').style.display='none';document.getElementById('batch-summary').classList.remove('show');}}
+function clearBatch(){batchItems=[];batchResults=[];renderBatchList();document.getElementById('btn-batch').disabled=true;document.getElementById('batch-actions').style.display='none';document.getElementById('batch-summary').classList.remove('show');}
+
+async function runBatch(){
+  const key=document.getElementById('key').value.trim();
+  if(!key){showToast('Введи секретный ключ!');return;}
+  if(!batchItems.length)return;
+
+  document.getElementById('btn-batch').disabled=true;
+  batchResults=[];
+  const pb=document.getElementById('progress-bar');
+  const pf=document.getElementById('progress-fill');
+  pb.classList.add('show'); pf.style.width='0%';
+
+  let okCount=0, failCount=0;
+  for(let i=0;i<batchItems.length;i++){
+    batchItems[i].status='checking';
+    document.getElementById('bi-st-'+i).textContent='Проверяю…';
+    document.getElementById('bi-st-'+i).className='bi-status checking';
+    document.getElementById('bi-ico-'+i).textContent='⏳';
+
+    const res = await checkOneFile(batchItems[i].file, key);
+    batchItems[i].status = res.ok ? 'ok' : 'fail';
+    batchItems[i].result = res;
+
+    const stEl=document.getElementById('bi-st-'+i);
+    const icoEl=document.getElementById('bi-ico-'+i);
+    if(res.ok){
+      stEl.textContent='✓ '+res.id+' — ПОДЛИННОЕ';
+      stEl.className='bi-status ok';
+      icoEl.textContent='✅';
+      okCount++;
+    }else{
+      stEl.textContent='✗ '+(res.reason||'Ошибка проверки');
+      stEl.className='bi-status fail';
+      icoEl.textContent='❌';
+      failCount++;
+    }
+    batchResults.push({name:batchItems[i].name,...res});
+    pf.style.width=Math.round((i+1)/batchItems.length*100)+'%';
+    saveHist({id:res.id||'?',date:res.date||'?',gps:res.gps||'?',sig:res.sig||'?',ok:res.ok,ts:Date.now()});
+  }
+
+  pb.classList.remove('show');
+  document.getElementById('btn-batch').disabled=false;
+  showBatchSummary(okCount,failCount);
+}
+
+async function checkOneFile(file, key){
+  return new Promise(resolve=>{
+    const rd=new FileReader();
+    rd.onload=ev=>{
+      const img=new Image();
+      img.onload=async()=>{
+        const cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;
+        const cx=cv.getContext('2d');cx.drawImage(img,0,0);
+        const d=cx.getImageData(0,0,cv.width,cv.height);
+        if(typeof jsQR==='undefined'){resolve({ok:false,reason:'jsQR не загружен'});return;}
+        const code=jsQR(d.data,d.width,d.height);
+        if(!code){resolve({ok:false,reason:'QR-код не найден на фото'});return;}
+        const parts=code.data.split('|');
+        if(parts.length<4){resolve({ok:false,reason:'Неверный формат QR'});return;}
+        const[id,date,gps,sig,ver='?']=parts;
+        const payload=id+'|'+date+'|'+gps;
+        const expected=await hmacSign(key,payload);
+        const sigClean=sig.toUpperCase().slice(0,16);
+        resolve({ok:expected===sigClean,id,date,gps,sig:sigClean,expected,ver,payload});
+      };
+      img.src=ev.target.result;
+    };
+    rd.readAsDataURL(file);
+  });
+}
+
+function showBatchSummary(ok,fail){
+  document.getElementById('bs-total').textContent=batchResults.length;
+  document.getElementById('bs-ok').textContent=ok;
+  document.getElementById('bs-fail').textContent=fail;
+  document.getElementById('bs-rows').innerHTML=batchResults.map(r=>`
+    <div class="bs-row">
+      <div class="bs-dot ${r.ok?'ok':'fail'}"></div>
+      <div class="bs-name" title="${r.name}">${r.name}</div>
+      <div class="bs-id">${r.id||'—'}</div>
+      <div class="bs-res ${r.ok?'ok':'fail'}">${r.ok?'✅ ОК':'❌ Ошибка'}</div>
+    </div>`).join('');
+  document.getElementById('batch-summary').classList.add('show');
+}
+
+function exportReport(){
+  if(!batchResults.length)return;
+  const header='Файл,ID,Дата,GPS,Подпись,Статус,Причина';
+  const rows=batchResults.map(r=>[
+    '"'+r.name+'"',
+    '"'+(r.id||'')+'"',
+    '"'+(r.date||'')+'"',
+    '"'+(r.gps||'')+'"',
+    '"'+(r.sig||'')+'"',
+    r.ok?'ПОДЛИННОЕ':'ОШИБКА',
+    '"'+(r.ok?'':'Подпись не совпадает')+'"'
+  ].join(','));
+  const csv=header+'\n'+rows.join('\n');
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download='verifycam_report_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  showToast('📄 Отчёт скачан');
+}
+
+// ══════════════════════════════════════
+//  ОДИНОЧНАЯ ПРОВЕРКА
+// ══════════════════════════════════════
+const singleDrop=document.getElementById('single-drop');
+singleDrop.addEventListener('dragover',e=>{e.preventDefault();singleDrop.classList.add('over');});
+singleDrop.addEventListener('dragleave',()=>singleDrop.classList.remove('over'));
+singleDrop.addEventListener('drop',e=>{e.preventDefault();singleDrop.classList.remove('over');const f=e.dataTransfer.files[0];if(f)procSingleFile(f);});
+
+function onSingleFile(e){const f=e.target.files[0];if(f)procSingleFile(f);e.target.value='';}
+
+function procSingleFile(file){
+  const rd=new FileReader();
+  rd.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{
+      const cv=document.createElement('canvas');cv.width=img.width;cv.height=img.height;
+      const cx=cv.getContext('2d');cx.drawImage(img,0,0);
+      const d=cx.getImageData(0,0,cv.width,cv.height);
+      document.getElementById('sd-ico').textContent='✅';
+      document.getElementById('sd-txt').textContent=file.name;
+      if(typeof jsQR==='undefined'){showToast('jsQR не загружен');return;}
+      const code=jsQR(d.data,d.width,d.height);
+      if(code){scanRaw=code.data;document.getElementById('qr-raw').value=code.data;document.getElementById('btn-sv').disabled=false;showToast('QR найден! Нажмите Проверить ✓');}
+      else showToast('QR не найден. Вставьте текст вручную.');
+    };img.src=ev.target.result;
+  };rd.readAsDataURL(file);
+}
+
+function onRaw(v){scanRaw=v.trim();document.getElementById('btn-sv').disabled=!scanRaw;}
+
+async function toggleCam(){
+  if(camStream){stopCam();return;}
+  try{
+    camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    const vid=document.getElementById('qvid');vid.srcObject=camStream;
+    document.getElementById('vid-wrap').style.display='block';
+    document.getElementById('btn-cam').textContent='⏹ Остановить сканер';
+    const cv=document.createElement('canvas'),cx=cv.getContext('2d');
+    camTmr=setInterval(()=>{
+      if(vid.readyState!==vid.HAVE_ENOUGH_DATA)return;
+      cv.width=vid.videoWidth;cv.height=vid.videoHeight;cx.drawImage(vid,0,0);
+      if(typeof jsQR==='undefined')return;
+      const code=jsQR(cx.getImageData(0,0,cv.width,cv.height).data,cv.width,cv.height);
+      if(code){scanRaw=code.data;document.getElementById('qr-raw').value=code.data;document.getElementById('btn-sv').disabled=false;stopCam();showToast('QR найден! Нажмите Проверить ✓');}
+    },300);
+  }catch(e){showToast('Нет доступа к камере: '+e.message);}
+}
+function stopCam(){
+  if(camTmr){clearInterval(camTmr);camTmr=null;}
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  document.getElementById('vid-wrap').style.display='none';
+  document.getElementById('btn-cam').textContent='📷 Сканировать QR камерой';
+}
+
+function verifySingle(){
+  const raw=(document.getElementById('qr-raw').value||scanRaw).trim();
+  if(!raw){showToast('Нет данных');return;}
+  const p=raw.split('|');
+  if(p.length<4){showSingleResult({ok:false,reason:'Неверный формат QR'});return;}
+  const[id,date,gps,sig,ver='?']=p;
+  const key=document.getElementById('key').value.trim();
+  if(!key){showToast('Введи секретный ключ!');return;}
+  const payload=id+'|'+date+'|'+gps;
+  hmacSign(key,payload).then(expected=>{
+    const sigClean=sig.toUpperCase().slice(0,16);
+    const ok=expected===sigClean;
+    showSingleResult({ok,id,date,gps,sig:sigClean,expected,ver,payload});
+    saveHist({id,date:date.replace('T',' '),gps,sig:sigClean,ok,ts:Date.now()});
+  });
+}
+
+function showSingleResult(r){
+  const el=document.getElementById('result');
+  el.className='result show '+(r.ok?'ok':'fail');
+  document.getElementById('r-ico').textContent=r.ok?'✅':'❌';
+  document.getElementById('r-ttl').textContent=r.ok?'ПОДПИСЬ СОВПАДАЕТ — ФОТО ПОДЛИННОЕ':'ПОДПИСЬ НЕ СОВПАДАЕТ';
+  let rowsHtml='';
+  if(r.id)rowsHtml+=row('ID клиента',r.id);
+  if(r.date)rowsHtml+=row('Дата / время',r.date.replace('T',' '));
+  if(r.gps){
+    let gpsVal=r.gps;
+    if(r.gps!=='NO_GPS'&&r.gps.includes(',')){const[la,lo]=r.gps.split(',');gpsVal=`<a href="https://maps.google.com/?q=${la},${lo}" target="_blank" style="color:#60a5fa">${la}, ${lo} 🗺</a>`;}
+    rowsHtml+=row('GPS',gpsVal);
+  }
+  if(r.ver)rowsHtml+=row('Версия',r.ver);
+  if(r.reason)rowsHtml+=row('Причина',r.reason);
+  document.getElementById('r-rows').innerHTML=rowsHtml;
+  document.getElementById('r-sig').innerHTML=r.sig?`
+    <div class="sline ${r.ok?'ok':'fail'}">QR подпись:&nbsp;&nbsp;<span>${r.sig}</span></div>
+    <div class="sline ${r.ok?'ok':'fail'}">Вычислена:&nbsp;&nbsp;<span>${r.expected}</span></div>
+    <div class="payload-hint">payload: ${r.payload}</div>
+  `:'';
+  el.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function row(k,v){return`<div class="r-row"><span class="rk">${k}</span><span class="rv">${v}</span></div>`;}
+
+// ИСТОРИЯ
+function saveHist(item){const h=JSON.parse(localStorage.getItem('vhist')||'[]');h.unshift(item);if(h.length>100)h.pop();localStorage.setItem('vhist',JSON.stringify(h));}
+function renderHist(){
+  const h=JSON.parse(localStorage.getItem('vhist')||'[]');
+  const el=document.getElementById('hist-list');
+  if(!h.length){el.innerHTML='<div class="h-empty">История пуста</div>';return;}
+  el.innerHTML=h.map(i=>`<div class="h-item"><div class="h-dot ${i.ok?'ok':'fail'}"></div><div class="h-info"><div class="h-id">${i.id}</div><div class="h-date">${i.date} · ${i.gps}</div></div><div style="font-size:16px">${i.ok?'✅':'❌'}</div></div>`).join('');
+}
+function clrHist(){localStorage.removeItem('vhist');renderHist();}
+
+// HMAC
+async function hmacSign(key,msg){
+  const enc=new TextEncoder();
+  const k=await crypto.subtle.importKey('raw',enc.encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const s=await crypto.subtle.sign('HMAC',k,enc.encode(msg));
+  return Array.from(new Uint8Array(s)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase().slice(0,16);
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
+</script>
+</body>
+</html>
