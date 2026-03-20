@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ВерифиКам">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>ВерифиКам</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;background:#000;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;overflow:hidden;color:#fff}
+
+/* ─── УТИЛИТЫ ─── */
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hidden{display:none!important}
+
+/* ─── ЭКРАН 1: СТАРТ ─── */
+#s-start{background:linear-gradient(170deg,#0d0d14 0%,#000 100%);padding:32px 24px;gap:20px}
+.logo{width:88px;height:88px;border-radius:20px;background:linear-gradient(135deg,#1a1a2e,#16213e);
+  border:1px solid rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;
+  font-size:44px;box-shadow:0 8px 32px rgba(0,0,0,0.6);flex-shrink:0}
+.app-name{font-size:28px;font-weight:700;letter-spacing:-0.02em}
+.app-sub{font-size:13px;color:rgba(255,255,255,0.4);text-align:center;line-height:1.6;max-width:260px}
+.client-id-box{
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
+  border-radius:10px;padding:10px 18px;font-size:12px;
+  color:rgba(255,255,255,0.5);letter-spacing:0.06em
+}
+.client-id-box span{color:#f5c518;font-weight:600}
+
+.btn-primary{
+  width:100%;max-width:300px;padding:18px;border-radius:14px;
+  background:#f5c518;border:none;color:#000;font-size:16px;font-weight:700;
+  cursor:pointer;letter-spacing:0.01em;
+  transition:background 0.12s,transform 0.09s;
+  display:flex;align-items:center;justify-content:center;gap:10px;
+}
+.btn-primary:active{background:#d4a800;transform:scale(0.97)}
+.btn-ghost{
+  background:none;border:none;color:rgba(255,255,255,0.35);
+  font-size:13px;cursor:pointer;padding:8px;margin-top:-8px;
+}
+
+.perms-list{
+  width:100%;max-width:300px;
+  display:flex;flex-direction:column;gap:8px;
+}
+.perm-row{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+  border-radius:10px;padding:11px 14px;
+}
+.perm-icon{font-size:20px;flex-shrink:0}
+.perm-info{display:flex;flex-direction:column;gap:1px}
+.perm-title{font-size:13px;font-weight:600;color:rgba(255,255,255,0.85)}
+.perm-desc{font-size:11px;color:rgba(255,255,255,0.4)}
+.perm-state{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:99px;flex-shrink:0}
+.perm-state.wait{background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.4)}
+.perm-state.ok{background:rgba(74,222,128,0.15);color:#4ade80}
+.perm-state.no{background:rgba(255,100,100,0.15);color:#f87171}
+
+/* iOS hint */
+.ios-install{
+  display:none;
+  width:100%;max-width:300px;
+  background:rgba(245,197,24,0.08);border:1px solid rgba(245,197,24,0.25);
+  border-radius:12px;padding:14px 16px;
+  font-size:12px;color:rgba(255,255,255,0.6);line-height:1.8;
+}
+.ios-install b{color:#f5c518}
+
+/* ─── ЭКРАН 2: КАМЕРА ─── */
+#s-cam{background:#000;justify-content:flex-start;align-items:stretch}
+
+.vf{flex:1;position:relative;overflow:hidden;background:#0a0a0a}
+
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* Сетка */
+.grid{position:absolute;inset:0;z-index:2;pointer-events:none;
+  display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr}
+.gv{border-left:1px solid rgba(255,255,255,0.08)}
+.gh{border-top:1px solid rgba(255,255,255,0.08)}
+
+/* Углы */
+.cr{position:absolute;width:20px;height:20px;z-index:3}
+.cr-tl{top:12px;left:12px;border-top:2px solid rgba(255,255,255,0.65);border-left:2px solid rgba(255,255,255,0.65)}
+.cr-tr{top:12px;right:12px;border-top:2px solid rgba(255,255,255,0.65);border-right:2px solid rgba(255,255,255,0.65)}
+.cr-bl{bottom:12px;left:12px;border-bottom:2px solid rgba(255,255,255,0.65);border-left:2px solid rgba(255,255,255,0.65)}
+.cr-br{bottom:12px;right:12px;border-bottom:2px solid rgba(255,255,255,0.65);border-right:2px solid rgba(255,255,255,0.65)}
+
+/* Фокус кольцо */
+#focus-ring{position:absolute;width:64px;height:64px;border:1.5px solid #f5c518;border-radius:2px;
+  pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(1.4);
+  transition:opacity 0.1s,transform 0.16s;z-index:4}
+#focus-ring.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* HUD */
+.hud{position:absolute;top:0;left:0;right:0;
+  padding:env(safe-area-inset-top,14px) 14px 0;
+  padding-top:max(env(safe-area-inset-top),14px);
+  display:flex;align-items:center;justify-content:space-between;z-index:5;pointer-events:none}
+.hud-time{font-size:13px;font-weight:600;color:rgba(255,255,255,0.88);
+  letter-spacing:0.05em;text-shadow:0 1px 8px #000,0 0 2px #000;font-variant-numeric:tabular-nums}
+.hud-gps{padding:4px 10px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:0.07em;
+  backdrop-filter:blur(8px);background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.13);
+  color:rgba(255,255,255,0.5);transition:all 0.4s}
+.hud-gps.ok{color:#4ade80;border-color:rgba(74,222,128,0.4);background:rgba(0,30,15,0.65)}
+.hud-gps.srch{color:#fbbf24;border-color:rgba(251,191,36,0.35);animation:gbl 1.1s ease infinite}
+@keyframes gbl{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* Кнопка смены камеры */
+#btn-flip{position:absolute;top:max(env(safe-area-inset-top),14px);left:50%;transform:translateX(-50%);
+  z-index:5;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.2);
+  border-radius:20px;padding:5px 14px;color:rgba(255,255,255,0.75);
+  font-size:12px;letter-spacing:0.05em;cursor:pointer;backdrop-filter:blur(8px)}
+#btn-flip:active{background:rgba(255,255,255,0.2)}
+
+/* ID бейдж */
+.id-badge{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;
+  background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);
+  border-radius:20px;padding:4px 14px;
+  color:rgba(255,255,255,0.4);font-size:10px;letter-spacing:0.07em;
+  backdrop-filter:blur(8px);white-space:nowrap;pointer-events:none}
+
+/* НИЖНЯЯ ПАНЕЛЬ */
+.cam-bar{background:#000;flex-shrink:0;
+  padding:14px 28px max(28px,env(safe-area-inset-bottom));
+  display:flex;align-items:center;justify-content:space-between}
+
+/* Кнопка съёмки */
+.shutter{width:80px;height:80px;border-radius:50%;
+  border:3px solid rgba(255,255,255,0.8);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:transform 0.08s;flex-shrink:0}
+.shutter:active{transform:scale(0.88)}
+.shutter-disc{width:65px;height:65px;border-radius:50%;background:#fff;
+  transition:background 0.08s,transform 0.08s}
+.shutter:active .shutter-disc{background:#ccc;transform:scale(0.9)}
+.shutter.busy .shutter-disc{background:#f5c518;animation:pulse 0.5s ease infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(0.87)}}
+
+/* Галерея / последнее фото */
+.thumb{width:52px;height:52px;border-radius:10px;border:2px solid rgba(255,255,255,0.25);
+  background:#111;overflow:hidden;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:22px;color:rgba(255,255,255,0.15)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:none}
+
+/* ─── ЭКРАН 3: ПРЕВЬЮ ─── */
+#s-preview{background:#000;justify-content:flex-start;align-items:stretch}
+.pv-wrap{flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000}
+#pv-img{max-width:100%;max-height:100%;object-fit:contain}
+.pv-bar{background:#0d0d0d;flex-shrink:0;border-top:1px solid rgba(255,255,255,0.07);
+  padding:10px 14px;display:flex;align-items:center;gap:8px}
+.pv-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:blink 1.6s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.1}}
+.pv-dot.ok{background:#4ade80;box-shadow:0 0 7px #4ade80}
+.pv-dot.warn{background:#fbbf24;box-shadow:0 0 7px #fbbf24}
+.pv-txt{font-size:11px;color:rgba(255,255,255,0.6);letter-spacing:0.04em}
+.pv-sig{font-size:10px;color:rgba(255,255,255,0.22);font-family:monospace;margin-left:auto}
+.pv-actions{background:#111;flex-shrink:0;
+  padding:12px 14px max(32px,env(safe-area-inset-bottom));display:flex;gap:10px}
+.btn-retake{flex:1;padding:15px;border-radius:12px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.1);
+  color:#fff;font-size:15px;font-weight:600;cursor:pointer}
+.btn-retake:active{background:rgba(255,255,255,0.14)}
+.btn-dl{flex:2;padding:15px;border-radius:12px;
+  background:#f5c518;border:none;color:#000;font-size:15px;font-weight:700;cursor:pointer}
+.btn-dl:active{background:#d4a800}
+
+/* ─── ОБЩЕЕ ─── */
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99;transition:opacity 0.05s}
+.flash.go{opacity:1}
+
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(16px);
+  background:rgba(10,10,10,0.97);color:#fff;font-size:13px;font-weight:500;
+  padding:12px 22px;border-radius:99px;opacity:0;pointer-events:none;z-index:200;
+  transition:opacity 0.2s,transform 0.2s;white-space:nowrap;
+  border:1px solid rgba(255,255,255,0.09);backdrop-filter:blur(16px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:rgba(74,222,128,0.4)}
+#toast.err{border-color:rgba(248,113,113,0.4)}
+
+#loader{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,0.75);
+  display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#loader.show{display:flex}
+.spin{width:46px;height:46px;border-radius:50%;
+  border:3px solid rgba(255,255,255,0.1);border-top-color:#f5c518;
+  animation:spin 0.65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loader-txt{font-size:12px;color:rgba(255,255,255,0.55);letter-spacing:0.08em}
+</style>
+</head>
+<body>
+
+<script>
+// ════════════════════════
+//  🔐 КОНФИГУРАЦИЯ
+// ════════════════════════
+const CFG = {
+  SECRET_KEY: "MY_SECRET_KEY_2024",   // ← ЗАМЕНИ НА СВОЙ КЛЮЧ
+  VER: "3.0"
+};
+// ID клиента из URL (?id=...) или дефолтный
+CFG.CLIENT_ID = new URLSearchParams(location.search).get('id') || 'CLIENT_001';
+</script>
+
+<!-- QRCode.js встроена (офлайн) -->
+<script>var QRCode;!function(){function a(a){this.mode=c.MODE_8BIT_BYTE,this.data=a,this.parsedData=[];for(var b=[],d=0,e=this.data.length;e>d;d++){var f=this.data.charCodeAt(d);f>65536?(b[0]=240|(1835008&f)>>>18,b[1]=128|(258048&f)>>>12,b[2]=128|(4032&f)>>>6,b[3]=128|(63&f)):f>2048?(b[0]=192|(1984&f)>>>6,b[1]=128|(63&f)):f>128?(b[0]=224|(61440&f)>>>12,b[1]=128|(4032&f)>>>6,b[2]=128|(63&f)):b[0]=f,this.parsedData=this.parsedData.concat(b),b=[];this.parsedData.length!=this.data.length&&(this.parsedData.unshift(191),this.parsedData.unshift(187),this.parsedData.unshift(239))}}function b(a,b){this.typeNumber=a,this.errorCorrectionLevel=b,this.modules=null,this.moduleCount=0,this.dataCache=null,this.dataList=[]}a.prototype={getLength:function(){return this.parsedData.length},write:function(a){for(var b=0,c=this.parsedData.length;c>b;b++)a.put(this.parsedData[b],8)}},b.prototype={addData:function(c){this.dataList.push(new a(c)),this.dataCache=null},isDark:function(a,b){if(0>a||this.moduleCount<=a||0>b||this.moduleCount<=b)throw new Error(a+","+b);return this.modules[a][b]},getModuleCount:function(){return this.moduleCount},make:function(){if(1>this.typeNumber){for(var a=1;40>=a;a++){for(var b=p.getRSBlocks(a,this.errorCorrectionLevel),c=new o,d=0,e=0;e<b.length;e++)d+=b[e].dataCount;for(var f=0,e=0;e<this.dataList.length;e++)f+=this.dataList[e].getLength();if(d>=f)break}this.typeNumber=a}this.makeImpl(!1,this.getBestMaskPattern())},makeImpl:function(a,c){this.moduleCount=4*this.typeNumber+17,this.modules=new Array(this.moduleCount);for(var d=0;d<this.moduleCount;d++){this.modules[d]=new Array(this.moduleCount);for(var e=0;e<this.moduleCount;e++)this.modules[d][e]=null}this.setupPositionProbePattern(0,0),this.setupPositionProbePattern(this.moduleCount-7,0),this.setupPositionProbePattern(0,this.moduleCount-7),this.setupPositionAdjustPattern(),this.setupTimingPattern(),this.setupTypeInfo(a,c),this.typeNumber>=7&&this.setupTypeNumber(a),null==this.dataCache&&(this.dataCache=b.createData(this.typeNumber,this.errorCorrectionLevel,this.dataList)),this.mapData(this.dataCache,c)},setupPositionProbePattern:function(a,b){for(var c=-1;7>=c;c++)if(!(-1>a+c||this.moduleCount<=a+c))for(var d=-1;7>=d;d++)-1>b+d||this.moduleCount<=b+d||(this.modules[a+c][b+d]=c>=0&&6>=c&&(0==d||6==d)||d>=0&&6>=d&&(0==c||6==c)||c>=2&&4>=c&&d>=2&&4>=d?!0:!1)},getBestMaskPattern:function(){for(var a=0,b=0,c=0;8>c;c++){this.makeImpl(!0,c);var d=k.getLostPoint(this);(0==c||a>d)&&(a=d,b=c)}return b},setupTimingPattern:function(){for(var a=8;a<this.moduleCount-8;a++)null==this.modules[a][6]&&(this.modules[a][6]=0==a%2);for(var b=8;b<this.moduleCount-8;b++)null==this.modules[6][b]&&(this.modules[6][b]=0==b%2)},setupPositionAdjustPattern:function(){for(var a=k.getPatternPosition(this.typeNumber),b=0;b<a.length;b++)for(var c=0;c<a.length;c++){var d=a[b],e=a[c];if(null==this.modules[d][e])for(var f=-2;2>=f;f++)for(var g=-2;2>=g;g++)this.modules[d+f][e+g]=-2==f||2==f||-2==g||2==g||0==f&&0==g?!0:!1}},setupTypeNumber:function(a){for(var b=k.getBCHTypeNumber(this.typeNumber),c=0;18>c;c++){var d=!a&&1==(b>>c&1);this.modules[Math.floor(c/3)][c%3+this.moduleCount-8-3]=d}for(var c=0;18>c;c++){var d=!a&&1==(b>>c&1);this.modules[c%3+this.moduleCount-8-3][Math.floor(c/3)]=d}},setupTypeInfo:function(a,b){for(var c=this.errorCorrectionLevel.bit<<3|b,d=k.getBCHTypeInfo(c),e=0;15>e;e++){var f=!a&&1==(d>>e&1);6>e?this.modules[e][8]=f:8>e?this.modules[e+1][8]=f:this.modules[this.moduleCount-15+e][8]=f}for(var e=0;15>e;e++){var f=!a&&1==(d>>e&1);8>e?this.modules[8][this.moduleCount-e-1]=f:9>e?this.modules[8][15-e-1+1]=f:this.modules[8][15-e-1]=f}this.modules[this.moduleCount-8][8]=!a},mapData:function(a,b){for(var c=-1,d=this.moduleCount-1,e=7,f=0,g=this.moduleCount-1;g>=1;g-=2){6==g&&g--;for(;;){for(var h=0;2>h;h++)if(null==this.modules[d][g-h]){var i=!1;f<a.length&&(i=1==(a[f]>>>e&1)),k.getMask(b,d,g-h)&&(i=!i),this.modules[d][g-h]=i,e--,-1==e&&(f++,e=7)}if(d+=c,0>d||this.moduleCount<=d){d-=c,c=-c;break}}}},b.createData=function(a,c,d){for(var e=p.getRSBlocks(a,c),f=new o,g=0;g<d.length;g++){var h=d[g];f.put(h.mode,4),f.put(h.getLength(),k.getLengthInBits(h.mode,a)),h.write(f)}for(var i=0,g=0;g<e.length;g++)i+=e[g].dataCount;if(f.getLengthInBits()>8*i)throw new Error("overflow");for(f.getLengthInBits()+4<=8*i&&f.put(0,4);0!=f.getLengthInBits()%8;)f.putBit(!1);for(;;){if(f.getLengthInBits()>=8*i)break;if(f.put(k.PAD0,8),f.getLengthInBits()>=8*i)break;f.put(k.PAD1,8)}return b.createBytes(f,e)},b.createBytes=function(a,b){for(var c=0,d=0,e=0,f=new Array(b.length),g=new Array(b.length),h=0;h<b.length;h++){var i=b[h].dataCount,j=b[h].totalCount-i;d=Math.max(d,i),e=Math.max(e,j),f[h]=new Array(i);for(var l=0;l<f[h].length;l++)f[h][l]=255&a.buffer[c++];g[h]=new Array(j);for(var l=0;l<g[h].length;l++)g[h][l]=0}var m=0,n=new Array(b[b.length-1].totalCount-b[b.length-1].dataCount);for(var l=0;d>l;l++)for(var h=0;h<b.length;h++)l<f[h].length&&(n[m++]=f[h][l]);for(var l=0;e>l;l++)for(var h=0;h<b.length;h++)l<g[h].length&&(n[m++]=g[h][l]);return n}};var d=function(){var a=function(a,b){this.totalCount=a,this.dataCount=b};return{getRSBlocks:function(b,c){var e=d.getRsBlockTable(b,c);if(void 0==e)throw new Error("bad rs block");for(var f=e.length/3,g=[],h=0;f>h;h++)for(var i=0;i<e[3*h];i++)g.push(new a(e[3*h+1],e[3*h+2]));return g},getRsBlockTable:function(a,b){switch(b){case d.errorCorrectionLevel.L:return d.RS_BLOCK_TABLE[(a-1)*4+0];case d.errorCorrectionLevel.M:return d.RS_BLOCK_TABLE[(a-1)*4+1];case d.errorCorrectionLevel.Q:return d.RS_BLOCK_TABLE[(a-1)*4+2];case d.errorCorrectionLevel.H:return d.RS_BLOCK_TABLE[(a-1)*4+3];default:return void 0}},errorCorrectionLevel:{L:1,M:0,Q:3,H:2},RS_BLOCK_TABLE:[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]]}}(),e=function(){var a=1335220705;return{getBCHTypeInfo:function(b){for(var c=b<<10;e.digit(c)>=e.digit(a);)c^=a<<e.digit(c)-e.digit(a);return(b<<10|c)^1335220705},getBCHTypeNumber:function(b){for(var c=b<<12;e.digit(c)>=e.digit(7973);)c^=7973<<e.digit(c)-e.digit(7973);return b<<12|c},digit:function(a){for(var b=0;0!=a;)b++,a>>>=1;return b},getPatternPosition:function(a){return e.PATTERN_POSITION_TABLE[a-1]},getMask:function(a,b,c){switch(a){case 0:return 0==(b+c)%2;case 1:return 0==b%2;case 2:return 0==c%3;case 3:return 0==(b+c)%3;case 4:return 0==(Math.floor(b/2)+Math.floor(c/3))%2;case 5:return 0==b*c%2+b*c%3;case 6:return 0==(b*c%2+b*c%3)%2;case 7:return 0==(b*c%3+(b+c)%2)%2;default:throw new Error("bad mask")}},getLostPoint:function(a){for(var b=a.getModuleCount(),c=0,d=0;b>d;d++){for(var e=0;b>e;e++){for(var f=0,g=a.isDark(d,e),h=-1;1>=h;h++)if(!(0>d+h||b<=d+h))for(var i=-1;1>=i;i++)0>e+i||b<=e+i||(0!=h||0!=i)&&g==a.isDark(d+h,e+i)&&f++;f>=5&&(c+=3+f-5)}for(var d=0;b-1>d;d++)for(var e=0;b-1>e;e++){var j=0;a.isDark(d,e)&&j++,a.isDark(d+1,e)&&j++,a.isDark(d,e+1)&&j++,a.isDark(d+1,e+1)&&j++,(0==j||4==j)&&(c+=3)}}c+=10*(Math.abs(100*k.countDark(a)/b/b-50)/5|0);var l=0;for(var d=0;b>d;d++){for(var m=0,e=0;b>e;e++)m=a.isDark(d,e)?m<<1|1:m<<1&2047,(e>=10&&(0==m||2047==m))&&(l++)}for(var e=0;b>e;e++){for(var m=0,d=0;b>d;d++)m=a.isDark(d,e)?m<<1|1:m<<1&2047,(d>=10&&(0==m||2047==m))&&(l++)}return c+=10*l},getLengthInBits:function(a,b){if(a==f.MODE_NUMBER){if(10>b)return 10;if(27>b)return 12;return 14}if(a==f.MODE_ALPHA_NUM){if(10>b)return 9;if(27>b)return 11;return 13}if(a==f.MODE_8BIT_BYTE){if(10>b)return 8;if(27>b)return 16;return 16}if(a==f.MODE_KANJI){if(10>b)return 8;if(27>b)return 10;return 12}throw new Error("mode:"+a)},countDark:function(a){for(var b=0,c=0;c<a.getModuleCount();c++)for(var d=0;d<a.getModuleCount();d++)a.isDark(c,d)&&b++;return b},PATTERN_POSITION_TABLE:[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,86,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]],PAD0:236,PAD1:17}},k=e,f={MODE_NUMBER:1,MODE_ALPHA_NUM:2,MODE_8BIT_BYTE:4,MODE_KANJI:8};function h(){this.buffer=[],this.length=0,this.put=function(a,b){for(var c=0;b>c;c++)this.putBit(1==(a>>>b-c-1&1))},this.getLengthInBits=function(){return this.length},this.putBit=function(a){var b=Math.floor(this.length/8);this.buffer.length<=b&&this.buffer.push(0),a&&(this.buffer[b]|=128>>>this.length%8),this.length++}}var o=h,p=d;QRCode=function(a,b){"string"==typeof b&&(b={text:b});var c={width:128,height:128,typeNumber:0,colorDark:"#000",colorLight:"#fff",correctLevel:p.errorCorrectionLevel.H};if(b)for(var e in b)c[e]=b[e];"string"==typeof a&&(a=document.getElementById(a));this._el=a;this._o=c;this._draw=new QRCode.CanvasDrawer(a,c);c.text&&this.makeCode(c.text)},QRCode.prototype={makeCode:function(a){var c=new b(this._o.typeNumber,this._o.correctLevel);c.addData(a),c.make(),this._draw.draw(c)},clear:function(){this._draw.clear()}},QRCode.CorrectLevel=p.errorCorrectionLevel;QRCode.CanvasDrawer=function(a,b){this._o=b,this._c=document.createElement("canvas"),this._c.width=b.width,this._c.height=b.height,a.appendChild(this._c),this._ctx=this._c.getContext("2d")},QRCode.CanvasDrawer.prototype={draw:function(a){var b=this._c,c=b.getContext("2d"),d=this._o,e=a.getModuleCount(),f=d.width/e,g=d.height/e;c.clearRect(0,0,b.width,b.height);for(var h=0;e>h;h++)for(var i=0;e>i;i++){c.fillStyle=a.isDark(h,i)?d.colorDark:d.colorLight;var j=Math.round(i*f),k=Math.round(h*g),l=Math.round((i+1)*f)-j,m=Math.round((h+1)*g)-k;c.fillRect(j,k,l,m)}},clear:function(){this._ctx.clearRect(0,0,this._o.width,this._o.height)}},"undefined"!=typeof module&&(module.exports=QRCode)}();</script>
+
+<!-- DOM -->
+<div class="flash" id="flash"></div>
+<div id="toast"></div>
+<div id="loader"><div class="spin"></div><div id="loader-txt">ОБРАБОТКА...</div></div>
+
+<!-- ══ ЭКРАН 1: СТАРТ ══ -->
+<div class="screen" id="s-start">
+  <div class="logo">📷</div>
+  <div class="app-name">ВерифиКам</div>
+  <div class="app-sub">Нажмите кнопку — браузер запросит доступ к камере и геолокации</div>
+
+  <div class="client-id-box">Клиент: <span id="show-id"></span></div>
+
+  <div class="perms-list">
+    <div class="perm-row">
+      <div class="perm-icon">📷</div>
+      <div class="perm-info">
+        <div class="perm-title">Камера</div>
+        <div class="perm-desc">Для съёмки верификационного фото</div>
+      </div>
+      <div class="perm-state wait" id="p-cam">Ожидание</div>
+    </div>
+    <div class="perm-row">
+      <div class="perm-icon">📍</div>
+      <div class="perm-info">
+        <div class="perm-title">Геолокация</div>
+        <div class="perm-desc">GPS координаты вшиваются в QR</div>
+      </div>
+      <div class="perm-state wait" id="p-gps">Ожидание</div>
+    </div>
+  </div>
+
+  <!-- ГЛАВНАЯ КНОПКА — пользователь нажимает сам, это триггер для getUserMedia -->
+  <button class="btn-primary" id="btn-start" onclick="onStart()">
+    <span>📷</span> Открыть камеру
+  </button>
+  <button class="btn-ghost" onclick="onStart()">Пропустить установку разрешений</button>
+
+  <div class="ios-install" id="ios-hint">
+    <b>iPhone Safari:</b> нажми □↑ → «На экран "Домой"» → Добавить — и приложение появится как иконка
+  </div>
+</div>
+
+<!-- ══ ЭКРАН 2: КАМЕРА ══ -->
+<div class="screen hidden" id="s-cam" style="justify-content:flex-start;align-items:stretch">
+  <div class="vf" id="vf" onclick="onTap(event)">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="grid">
+      <div></div><div class="gv"></div><div class="gv"></div>
+      <div class="gh"></div><div class="gv gh"></div><div class="gv gh"></div>
+      <div class="gh"></div><div class="gv gh"></div><div class="gv gh"></div>
+    </div>
+    <div class="cr cr-tl"></div><div class="cr cr-tr"></div>
+    <div class="cr cr-bl"></div><div class="cr cr-br"></div>
+    <div id="focus-ring"></div>
+    <div class="hud">
+      <div class="hud-time" id="htime">00:00:00</div>
+      <div class="hud-gps srch" id="gbadge">GPS…</div>
+    </div>
+    <button id="btn-flip" onclick="event.stopPropagation();flipCam()">⟳ Перевернуть</button>
+    <div class="id-badge" id="id-badge"></div>
+  </div>
+  <div class="cam-bar">
+    <div class="thumb" id="thumb" onclick="openPreview()">
+      <span id="thumb-icon">▤</span>
+      <img id="thumb-img" src="" alt="">
+    </div>
+    <div class="shutter" id="shutter" onclick="shoot()">
+      <div class="shutter-disc"></div>
+    </div>
+    <div style="width:52px"></div><!-- балансировка -->
+  </div>
+</div>
+
+<!-- ══ ЭКРАН 3: ПРЕВЬЮ ══ -->
+<div class="screen hidden" id="s-preview" style="justify-content:flex-start;align-items:stretch">
+  <div class="pv-wrap"><img id="pv-img" src="" alt=""></div>
+  <div class="pv-bar">
+    <div class="pv-dot ok" id="pv-dot"></div>
+    <div class="pv-txt" id="pv-txt">Верификация...</div>
+    <div class="pv-sig" id="pv-sig"></div>
+  </div>
+  <div class="pv-actions">
+    <button class="btn-retake" onclick="retake()">✕ Переснять</button>
+    <button class="btn-dl" onclick="savePhoto()">↓ Сохранить</button>
+  </div>
+</div>
+
+<canvas id="cv" style="display:none"></canvas>
+<div id="qd" style="display:none;position:fixed;left:-9999px;top:0"></div>
+
+<script>
+// ══════════════════════════════════
+//  STATE
+// ══════════════════════════════════
+let stream = null, facingMode = 'environment';
+let gps = null, blob = null, meta = null, camOk = false;
+
+const video   = document.getElementById('video');
+const shutter = document.getElementById('shutter');
+
+// ── INIT ──
+document.getElementById('show-id').textContent = CFG.CLIENT_ID;
+document.getElementById('id-badge').textContent = 'ID: ' + CFG.CLIENT_ID;
+
+// iOS hint
+if (/iphone|ipad|ipod/i.test(navigator.userAgent) && !navigator.standalone)
+  document.getElementById('ios-hint').style.display = 'block';
+
+// ── ЧАСЫ ──
+setInterval(() => {
+  const n = new Date();
+  const el = document.getElementById('htime');
+  if(el) el.textContent = p2(n.getHours())+':'+p2(n.getMinutes())+':'+p2(n.getSeconds());
+}, 1000);
+
+// ══════════════════════════════════
+//  ГЛАВНАЯ КНОПКА — запрос разрешений
+//  ВАЖНО: вызывается строго из onclick
+//  (user gesture), иначе браузер блокирует
+// ══════════════════════════════════
+async function onStart() {
+  document.getElementById('btn-start').disabled = true;
+  document.getElementById('btn-start').textContent = 'Запуск...';
+
+  // 1. Камера — ДОЛЖНА вызываться из user gesture
+  await startCamera();
+
+  // 2. GPS — тоже из user gesture (некоторые браузеры требуют)
+  startGPS();
+
+  // 3. Переключаем экран
+  show('s-cam');
+}
+
+// ══════════════════════════════════
+//  КАМЕРА
+// ══════════════════════════════════
+async function startCamera() {
+  const pEl = document.getElementById('p-cam');
+  try {
+    if (stream) { stream.getTracks().forEach(t => t.stop()); stream = null; }
+
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: facingMode },
+        width:  { ideal: 1920 },
+        height: { ideal: 1440 }
+      },
+      audio: false
+    });
+
+    video.srcObject = stream;
+    // playsinline + muted = работает на iOS без взаимодействия
+    video.setAttribute('playsinline', '');
+    video.setAttribute('muted', '');
+    await video.play();
+
+    camOk = true;
+    pEl.textContent = 'Разрешено'; pEl.className = 'perm-state ok';
+    document.getElementById('btn-flip').style.display = 'block';
+
+  } catch(err) {
+    camOk = false;
+    pEl.textContent = 'Отклонено'; pEl.className = 'perm-state no';
+    // Покажем понятную инструкцию
+    const msg = err.name === 'NotAllowedError'
+      ? 'Камера: нажмите 🔒 в адресной строке → Разрешить камеру → Обновить страницу'
+      : 'Ошибка камеры: ' + err.message;
+    toast(msg, 'err');
+    console.error('Camera:', err);
+  }
+}
+
+async function flipCam() {
+  facingMode = facingMode === 'environment' ? 'user' : 'environment';
+  camOk = false;
+  await startCamera();
+}
+
+// ══════════════════════════════════
+//  GPS
+// ══════════════════════════════════
+function startGPS() {
+  const el = document.getElementById('gbadge');
+  const pEl = document.getElementById('p-gps');
+  if (!navigator.geolocation) {
+    el.textContent = 'GPS —'; el.className = 'hud-gps';
+    pEl.textContent = 'Нет'; pEl.className = 'perm-state no';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      gps = { lat: pos.coords.latitude.toFixed(5), lon: pos.coords.longitude.toFixed(5) };
+      el.textContent = '⌖ GPS'; el.className = 'hud-gps ok';
+      pEl.textContent = 'Разрешено'; pEl.className = 'perm-state ok';
+    },
+    err => {
+      el.textContent = 'GPS —'; el.className = 'hud-gps';
+      pEl.textContent = 'Отклонено'; pEl.className = 'perm-state no';
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+// ══════════════════════════════════
+//  ФОКУС ПРИ ТАПЕ
+// ══════════════════════════════════
+function onTap(e) {
+  const r = document.getElementById('focus-ring');
+  const rc = document.getElementById('vf').getBoundingClientRect();
+  r.style.left = (e.clientX - rc.left) + 'px';
+  r.style.top  = (e.clientY - rc.top) + 'px';
+  r.classList.remove('show'); void r.offsetWidth; r.classList.add('show');
+  setTimeout(() => r.classList.remove('show'), 850);
+}
+
+// ══════════════════════════════════
+//  СЪЁМКА
+// ══════════════════════════════════
+async function shoot() {
+  if (!camOk) { toast('Камера не готова — разрешите доступ', 'err'); return; }
+
+  // Вспышка
+  const fl = document.getElementById('flash');
+  fl.classList.add('go'); setTimeout(() => fl.classList.remove('go'), 140);
+  shutter.classList.add('busy');
+  showLoader('СНИМОК...');
+
+  try {
+    const cv = document.getElementById('cv');
+    const cx = cv.getContext('2d');
+    const W  = video.videoWidth  || 1280;
+    const H  = video.videoHeight || 960;
+    cv.width = W; cv.height = H;
+    cx.drawImage(video, 0, 0, W, H);
+
+    const gpsStr  = gps ? gps.lat + ',' + gps.lon : 'NO_GPS';
+    const dateStr = isoNow(new Date());
+    const payload = CFG.CLIENT_ID + '|' + dateStr + '|' + gpsStr;
+    const hmac    = await hmacSign(CFG.SECRET_KEY, payload);
+
+    meta = { date: dateStr, gps: gpsStr, id: CFG.CLIENT_ID, hmac, ver: CFG.VER };
+
+    showLoader('QR-КОД...');
+    await addQR(cx, W, H, meta);
+
+    cv.toBlob(b => {
+      blob = b;
+      const url = URL.createObjectURL(b);
+      document.getElementById('pv-img').src = url;
+
+      // Миниатюра
+      const ti = document.getElementById('thumb-img');
+      ti.src = url; ti.style.display = 'block';
+      document.getElementById('thumb-icon').style.display = 'none';
+
+      setStatus(gpsStr, hmac);
+      hideLoader();
+      shutter.classList.remove('busy');
+      show('s-preview');
+    }, 'image/jpeg', 0.93);
+
+  } catch(err) {
+    hideLoader(); shutter.classList.remove('busy');
+    toast('Ошибка: ' + err.message, 'err');
+    console.error(err);
+  }
+}
+
+// ══════════════════════════════════
+//  QR STAMP
+// ══════════════════════════════════
+function addQR(cx, W, H, m) {
+  return new Promise(resolve => {
+    const txt  = JSON.stringify({ id: m.id, dt: m.date, gps: m.gps, sig: m.hmac, ver: m.ver });
+    const qrSz = Math.max(Math.round(Math.min(W, H) * 0.17), 100);
+    const mg   = Math.round(Math.min(W, H) * 0.025);
+    const pd   = Math.round(qrSz * 0.1);
+    const div  = document.getElementById('qd');
+    div.innerHTML = '';
+    new QRCode(div, { text: txt, width: qrSz, height: qrSz,
+      colorDark: '#000', colorLight: '#fff', correctLevel: QRCode.CorrectLevel.H });
+
+    setTimeout(() => {
+      const qc = div.querySelector('canvas');
+      const fs = Math.max(Math.round(qrSz * 0.09), 11);
+      const lh = fs + 6;
+      const bW = qrSz + pd * 2, bH = qrSz + pd * 2 + lh * 3 + pd;
+      const bx = mg, by = H - mg - bH;
+
+      cx.shadowColor = 'rgba(0,0,0,0.5)'; cx.shadowBlur = 18;
+      cx.shadowOffsetX = 2; cx.shadowOffsetY = 2;
+      cx.fillStyle = 'rgba(255,255,255,0.97)';
+      rrect(cx, bx, by, bW, bH, 10); cx.fill();
+      cx.shadowColor = 'transparent'; cx.shadowBlur = 0;
+
+      if (qc) cx.drawImage(qc, bx + pd, by + pd, qrSz, qrSz);
+
+      cx.textAlign = 'left';
+      let ty = by + pd + qrSz + fs + 4;
+      cx.fillStyle = '#000'; cx.font = 'bold ' + fs + 'px monospace';
+      cx.fillText(m.date.replace('T', ' ').slice(0, 16), bx + pd, ty); ty += lh;
+      cx.fillStyle = '#333'; cx.font = fs + 'px monospace';
+      cx.fillText(m.gps === 'NO_GPS' ? 'GPS: —' : m.gps.replace(',', ', '), bx + pd, ty); ty += lh;
+      cx.fillStyle = '#888';
+      cx.fillText('SIG: ' + m.hmac.slice(0, 12) + '…', bx + pd, ty);
+      resolve();
+    }, 100);
+  });
+}
+
+function rrect(cx, x, y, w, h, r) {
+  cx.beginPath();
+  cx.moveTo(x+r,y); cx.lineTo(x+w-r,y); cx.quadraticCurveTo(x+w,y,x+w,y+r);
+  cx.lineTo(x+w,y+h-r); cx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  cx.lineTo(x+r,y+h); cx.quadraticCurveTo(x,y+h,x,y+h-r);
+  cx.lineTo(x,y+r); cx.quadraticCurveTo(x,y,x+r,y);
+  cx.closePath();
+}
+
+// ══════════════════════════════════
+//  СТАТУС / НАВИГАЦИЯ
+// ══════════════════════════════════
+function setStatus(g, hmac) {
+  const ok = g !== 'NO_GPS';
+  document.getElementById('pv-dot').className = 'pv-dot ' + (ok ? 'ok' : 'warn');
+  document.getElementById('pv-txt').textContent = (ok ? '✓ Верифицировано' : '✓ Верифицировано (без GPS)') + ' · ' + CFG.CLIENT_ID;
+  document.getElementById('pv-sig').textContent = hmac.slice(0, 8) + '…';
+}
+
+function retake() { show('s-cam'); }
+function openPreview() { if (blob) show('s-preview'); }
+
+function show(id) {
+  ['s-start','s-cam','s-preview'].forEach(s => {
+    document.getElementById(s).classList.toggle('hidden', s !== id);
+  });
+}
+
+// ══════════════════════════════════
+//  СОХРАНЕНИЕ
+// ══════════════════════════════════
+function savePhoto() {
+  if (!blob) return;
+  const n  = new Date();
+  const fn = 'VERIFY_' + CFG.CLIENT_ID + '_' +
+    n.getFullYear() + p2(n.getMonth()+1) + p2(n.getDate()) + '_' +
+    p2(n.getHours()) + p2(n.getMinutes()) + p2(n.getSeconds()) + '.jpg';
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = fn;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  toast('📸 Сохранено! Отправьте файл в мессенджере', 'ok');
+}
+
+// ══════════════════════════════════
+//  HMAC-SHA256
+// ══════════════════════════════════
+async function hmacSign(key, msg) {
+  const enc = new TextEncoder();
+  const k = await crypto.subtle.importKey('raw', enc.encode(key),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const s = await crypto.subtle.sign('HMAC', k, enc.encode(msg));
+  return Array.from(new Uint8Array(s))
+    .map(b => b.toString(16).padStart(2,'0')).join('').toUpperCase().slice(0, 16);
+}
+
+// ══════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════
+function p2(n) { return String(n).padStart(2,'0'); }
+function isoNow(d) {
+  return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+
+         'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds());
+}
+function showLoader(t) { document.getElementById('loader-txt').textContent=t; document.getElementById('loader').classList.add('show'); }
+function hideLoader()  { document.getElementById('loader').classList.remove('show'); }
+function toast(msg, type) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = type||''; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// PWA Service Worker
+if ('serviceWorker' in navigator)
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
