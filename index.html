@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ВерифиКам">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>ВерифиКам</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;background:#000;font-family:-apple-system,sans-serif;overflow:hidden;color:#fff}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hidden{display:none!important}
+
+/* ── СТАРТ ── */
+#s-start{background:linear-gradient(160deg,#0d0d18 0%,#000 100%);padding:28px 20px;gap:14px}
+.logo{width:84px;height:84px;border-radius:20px;background:linear-gradient(135deg,#1a1a2e,#0d1b2a);border:1px solid rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;font-size:40px;box-shadow:0 8px 30px rgba(0,0,0,.7);flex-shrink:0}
+.app-name{font-size:26px;font-weight:700;letter-spacing:-.02em}
+.app-sub{font-size:12px;color:rgba(255,255,255,.38);text-align:center;line-height:1.55;max-width:250px}
+.cid-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:9px;padding:9px 16px;font-size:12px;color:rgba(255,255,255,.5)}
+.cid-box span{color:#f5c518;font-weight:600}
+.perms{width:100%;max-width:290px;display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;align-items:center;gap:11px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 13px}
+.picon{font-size:19px;flex-shrink:0}
+.ptitle{font-size:13px;font-weight:600;color:rgba(255,255,255,.85)}
+.pdesc{font-size:10px;color:rgba(255,255,255,.38)}
+.pstate{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:99px;flex-shrink:0;font-weight:500}
+.pstate.wait{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
+.pstate.ok{background:rgba(74,222,128,.15);color:#4ade80}
+.pstate.no{background:rgba(248,113,113,.15);color:#f87171}
+.btn-go{width:100%;max-width:290px;padding:16px;border-radius:13px;background:#f5c518;border:none;color:#000;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:9px;transition:background .12s,transform .09s}
+.btn-go:active{background:#d4a800;transform:scale(.97)}
+.btn-go:disabled{background:rgba(255,255,255,.18);color:rgba(0,0,0,.35)}
+.btn-skip{background:none;border:none;color:rgba(255,255,255,.28);font-size:12px;cursor:pointer;padding:6px;margin-top:-6px}
+.ios-hint{display:none;width:100%;max-width:290px;background:rgba(245,197,24,.07);border:1px solid rgba(245,197,24,.22);border-radius:11px;padding:13px;font-size:11px;color:rgba(255,255,255,.55);line-height:1.75}
+.ios-hint b{color:#f5c518}
+
+/* ── КАМЕРА ── */
+#s-cam{background:#000;justify-content:flex-start;align-items:stretch}
+.vf{flex:1;position:relative;overflow:hidden;background:#0a0a0a;touch-action:none}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+
+/* Сетка */
+.grid{position:absolute;inset:0;z-index:2;pointer-events:none;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr}
+.gv{border-left:1px solid rgba(255,255,255,.07)}
+.gh{border-top:1px solid rgba(255,255,255,.07)}
+.cr{position:absolute;width:20px;height:20px;z-index:3}
+.cr-tl{top:12px;left:12px;border-top:2px solid rgba(255,255,255,.6);border-left:2px solid rgba(255,255,255,.6)}
+.cr-tr{top:12px;right:12px;border-top:2px solid rgba(255,255,255,.6);border-right:2px solid rgba(255,255,255,.6)}
+.cr-bl{bottom:12px;left:12px;border-bottom:2px solid rgba(255,255,255,.6);border-left:2px solid rgba(255,255,255,.6)}
+.cr-br{bottom:12px;right:12px;border-bottom:2px solid rgba(255,255,255,.6);border-right:2px solid rgba(255,255,255,.6)}
+#fr{position:absolute;width:62px;height:62px;border:1.5px solid #f5c518;border-radius:2px;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(1.35);transition:opacity .1s,transform .15s;z-index:4}
+#fr.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+
+/* HUD */
+.hud{position:absolute;top:0;left:0;right:0;padding:max(env(safe-area-inset-top),12px) 13px 0;display:flex;align-items:center;justify-content:space-between;z-index:5;pointer-events:none}
+.htime{font-size:12px;font-weight:600;color:rgba(255,255,255,.9);letter-spacing:.05em;text-shadow:0 1px 6px #000;font-variant-numeric:tabular-nums}
+.gbadge{padding:3px 9px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:.06em;backdrop-filter:blur(8px);background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.5);transition:all .4s}
+.gbadge.ok{color:#4ade80;border-color:rgba(74,222,128,.4);background:rgba(0,28,14,.6)}
+.gbadge.srch{color:#fbbf24;border-color:rgba(251,191,36,.3);animation:gbl 1.1s ease infinite}
+@keyframes gbl{0%,100%{opacity:1}50%{opacity:.28}}
+
+/* Верхние кнопки (вспышка + переключить) */
+.top-btns{position:absolute;top:max(env(safe-area-inset-top),12px);left:50%;transform:translateX(-50%);z-index:5;display:flex;gap:10px;pointer-events:all}
+.top-btn{background:rgba(0,0,0,.52);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:5px 13px;color:rgba(255,255,255,.78);font-size:12px;cursor:pointer;backdrop-filter:blur(8px);white-space:nowrap;transition:background .15s}
+.top-btn:active{background:rgba(255,255,255,.22)}
+.top-btn.active{background:rgba(245,197,24,.22);border-color:rgba(245,197,24,.5);color:#f5c518}
+.top-btn.disabled{opacity:.38;pointer-events:none}
+
+/* Зум */
+.zoom-row{position:absolute;bottom:14px;left:12px;right:12px;z-index:5;display:none;align-items:center;gap:10px}
+.zoom-row.show{display:flex}
+.zoom-val{font-size:10px;color:rgba(255,255,255,.6);min-width:34px;text-align:center;text-shadow:0 1px 4px #000}
+input[type=range].zslider{flex:1;-webkit-appearance:none;height:3px;border-radius:99px;background:rgba(255,255,255,.22);outline:none;cursor:pointer}
+input[type=range].zslider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#f5c518;box-shadow:0 2px 6px rgba(0,0,0,.5)}
+input[type=range].zslider::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#f5c518;border:none}
+
+.id-badge{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(0,0,0,.48);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:3px 12px;color:rgba(255,255,255,.38);font-size:10px;letter-spacing:.06em;backdrop-filter:blur(8px);white-space:nowrap;pointer-events:none}
+
+/* Уведомление о сохранении */
+.notif{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:10;background:rgba(0,0,0,.82);border:1px solid rgba(74,222,128,.35);border-radius:14px;padding:18px 24px;text-align:center;backdrop-filter:blur(12px);display:none;flex-direction:column;gap:10px;min-width:220px}
+.notif.show{display:flex}
+.notif-img{width:100%;max-height:200px;object-fit:contain;border-radius:8px}
+.notif-title{font-size:13px;font-weight:600;color:#4ade80}
+.notif-hint{font-size:11px;color:rgba(255,255,255,.5);line-height:1.5}
+.notif-btns{display:flex;gap:8px}
+.notif-btn{flex:1;padding:9px;border-radius:9px;border:none;font-size:12px;font-weight:600;cursor:pointer}
+.notif-btn.dl{background:#f5c518;color:#000}
+.notif-btn.dl:active{background:#d4a800}
+.notif-btn.cls{background:rgba(255,255,255,.1);color:#fff}
+
+/* Нижняя панель */
+.cam-bar{background:#000;flex-shrink:0;padding:12px 0 max(26px,env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-around}
+.bar-btn{width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:22px;transition:background .15s}
+.bar-btn:active{background:rgba(255,255,255,.22)}
+.bar-btn.on{background:rgba(245,197,24,.2);border-color:rgba(245,197,24,.5)}
+.bar-btn.disabled{opacity:.35;pointer-events:none}
+.shutter{width:78px;height:78px;border-radius:50%;border:3px solid rgba(255,255,255,.82);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s}
+.shutter:active{transform:scale(.88)}
+.disc{width:63px;height:63px;border-radius:50%;background:#fff;transition:background .08s,transform .08s}
+.shutter:active .disc{background:#ccc;transform:scale(.9)}
+.shutter.busy .disc{background:#f5c518;animation:sp .5s ease infinite}
+@keyframes sp{0%,100%{transform:scale(1)}50%{transform:scale(.86)}}
+
+/* ПРЕВЬЮ-ЭКРАН */
+#s-preview{background:#000;justify-content:flex-start;align-items:stretch}
+.pv-wrap{flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#000;position:relative}
+#pv-img{max-width:100%;max-height:100%;object-fit:contain;display:block}
+.pv-bar{background:#0d0d0d;flex-shrink:0;border-top:1px solid rgba(255,255,255,.07);padding:10px 14px;display:flex;align-items:center;gap:9px}
+.pdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;animation:bl 1.5s ease infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.1}}
+.pdot.ok{background:#4ade80;box-shadow:0 0 7px #4ade80}
+.pdot.warn{background:#fbbf24;box-shadow:0 0 7px #fbbf24}
+.ptxt{font-size:11px;color:rgba(255,255,255,.6);letter-spacing:.04em}
+.psig{font-size:10px;color:rgba(255,255,255,.22);font-family:monospace;margin-left:auto}
+.pv-actions{background:#111;flex-shrink:0;padding:12px 14px max(30px,env(safe-area-inset-bottom));display:flex;gap:10px}
+.btn-ret{flex:1;padding:14px;border-radius:12px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.1);color:#fff;font-size:14px;font-weight:600;cursor:pointer}
+.btn-ret:active{background:rgba(255,255,255,.14)}
+.btn-sv{flex:2;padding:14px;border-radius:12px;background:#f5c518;border:none;color:#000;font-size:14px;font-weight:700;cursor:pointer}
+.btn-sv:active{background:#d4a800}
+
+/* Общее */
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99;transition:opacity .05s}
+.flash.go{opacity:1}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(8,8,8,.97);color:#fff;font-size:13px;font-weight:500;padding:11px 20px;border-radius:99px;opacity:0;pointer-events:none;z-index:200;transition:opacity .22s,transform .22s;white-space:nowrap;border:1px solid rgba(255,255,255,.09);backdrop-filter:blur(14px);max-width:90vw;overflow:hidden;text-overflow:ellipsis}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:rgba(248,113,113,.4)}
+#loader{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.76);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#loader.show{display:flex}
+.spin{width:44px;height:44px;border-radius:50%;border:3px solid rgba(255,255,255,.1);border-top-color:#f5c518;animation:spin .65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#ltxt{font-size:12px;color:rgba(255,255,255,.52);letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<script>
+// ════════════ ТРАНСЛИТЕРАЦИЯ ════════════
+const TR={'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'YO','Ж':'ZH','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'KH','Ц':'TS','Ч':'CH','Ш':'SH','Щ':'SCH','Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'YU','Я':'YA','а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+function tr(s){return s.split('').map(c=>TR[c]!==undefined?TR[c]:c).join('');}
+
+let CFG={SECRET_KEY:'',CLIENT_ID:'CLIENT_001',VER:'3.0'};
+
+// Определяем iOS один раз
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+</script>
+
+<!-- ════════════ QR ГЕНЕРАТОР (встроен, офлайн) ════════════ -->
+<script>
+(function(){
+var P0=0xEC,P1=0x11,ECL={L:1,M:0,Q:3,H:2};
+var E=new Array(256),L=new Array(256);
+for(var i=0;i<8;i++)E[i]=1<<i;
+for(var i=8;i<256;i++)E[i]=E[i-4]^E[i-5]^E[i-6]^E[i-8];
+for(var i=0;i<255;i++)L[E[i]]=i;
+function gx(n){while(n<0)n+=255;while(n>=256)n-=255;return E[n];}
+function gl(n){return L[n];}
+function poly(num,sh){var o=0;while(o<num.length&&num[o]==0)o++;var a=[];for(var i=0;i<num.length-o;i++)a.push(num[i+o]);for(var i=0;i<sh;i++)a.push(0);return{at:function(i){return a[i];},len:function(){return a.length;},mul:function(e){var r=new Array(this.len()+e.len()-1).fill(0);for(var i=0;i<this.len();i++)for(var j=0;j<e.len();j++)r[i+j]^=gx(gl(this.at(i))+gl(e.at(j)));return poly(r,0);},mod:function(e){if(this.len()-e.len()<0)return this;var r=gl(this.at(0))-gl(e.at(0));var n=this.len();var arr=[];for(var i=0;i<n;i++)arr.push(this.at(i));for(var i=0;i<e.len();i++)arr[i]^=gx(gl(e.at(i))+r);return poly(arr,0).mod(e);}};}
+var PP=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,86,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]];
+var G15=1335220705,G18=7973,GM=(1<<14)|(1<<12)|(1<<10)|(1<<4)|(1<<1);
+function bdig(d){var n=0;while(d){n++;d>>>=1;}return n;}
+function bti(d){var x=d<<10;while(bdig(x)-bdig(1335220705)>=0)x^=(1335220705<<(bdig(x)-bdig(1335220705)));return((d<<10)|x)^GM;}
+function btn(d){var x=d<<12;while(bdig(x)-bdig(7973)>=0)x^=(7973<<(bdig(x)-bdig(7973)));return(d<<12)|x;}
+function mkf(p){var F=[function(i,j){return(i+j)%2==0;},function(i,j){return i%2==0;},function(i,j){return j%3==0;},function(i,j){return(i+j)%3==0;},function(i,j){return(Math.floor(i/2)+Math.floor(j/3))%2==0;},function(i,j){return(i*j)%2+(i*j)%3==0;},function(i,j){return((i*j)%2+(i*j)%3)%2==0;},function(i,j){return((i*j)%3+(i+j)%2)%2==0;}];return F[p];}
+function ecp(l){var a=poly([1],0);for(var i=0;i<l;i++)a=a.mul(poly([1,gx(i)],0));return a;}
+function lb(m,t){return t<10?(m==4?8:m==2?9:10):t<27?(m==4?16:m==2?11:12):(m==4?16:m==2?13:14);}
+var RST=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]];
+function grs(tn,ecl){var k=ecl==1?0:ecl==0?1:ecl==3?2:3;var t=RST[(tn-1)*4+k];var r=[];for(var i=0;i<t.length/3;i++)for(var j=0;j<t[i*3];j++)r.push({tc:t[i*3+1],dc:t[i*3+2]});return r;}
+function mkbuf(){var b=[],n=0;return{buf:function(){return b;},len:function(){return n;},put:function(v,l){for(var i=0;i<l;i++)this.bit(((v>>>(l-i-1))&1)==1);},bit:function(v){var i=Math.floor(n/8);if(b.length<=i)b.push(0);if(v)b[i]|=(0x80>>(n%8));n++;}};}
+function mkbyte(text){var bytes=[];for(var i=0;i<text.length;i++){var c=text.charCodeAt(i);if(c<128)bytes.push(c);else if(c<2048){bytes.push(0xC0|(c>>6));bytes.push(0x80|(c&0x3F));}else{bytes.push(0xE0|(c>>12));bytes.push(0x80|((c>>6)&0x3F));bytes.push(0x80|(c&0x3F));}}return{mode:4,len:function(){return bytes.length;},write:function(buf){for(var i=0;i<bytes.length;i++)buf.put(bytes[i],8);}};}
+window.makeQR=function(text,cs){
+  var ecl=ECL.M,d=mkbyte(text),tn=1;
+  for(;tn<=40;tn++){var rs=grs(tn,ecl),buf=mkbuf();buf.put(4,4);buf.put(d.len(),lb(4,tn));d.write(buf);var tot=rs.reduce(function(s,r){return s+r.dc;},0);if(buf.len()<=tot*8)break;}
+  var mc=tn*4+17,M=[];
+  for(var i=0;i<mc;i++){M[i]=new Array(mc).fill(null);}
+  function probe(r,c){for(var dr=-1;dr<=7;dr++){if(r+dr<0||mc<=r+dr)continue;for(var dc=-1;dc<=7;dc++){if(c+dc<0||mc<=c+dc)continue;M[r+dr][c+dc]=((0<=dr&&dr<=6&&dc==0)||(0<=dr&&dr<=6&&dc==6)||(dr==0&&0<=dc&&dc<=6)||(dr==6&&0<=dc&&dc<=6)||(2<=dr&&dr<=4&&2<=dc&&dc<=4));}}}
+  probe(0,0);probe(mc-7,0);probe(0,mc-7);
+  var pp=PP[tn-1];
+  for(var i=0;i<pp.length;i++)for(var j=0;j<pp.length;j++){var pr=pp[i],pc=pp[j];if(M[pr][pc]!=null)continue;for(var dr=-2;dr<=2;dr++)for(var dc=-2;dc<=2;dc++)M[pr+dr][pc+dc]=(dr==-2||dr==2||dc==-2||dc==2||dr==0&&dc==0);}
+  for(var r=8;r<mc-8;r++)if(M[r][6]==null)M[r][6]=(r%2==0);
+  for(var c=8;c<mc-8;c++)if(M[6][c]==null)M[6][c]=(c%2==0);
+  if(tn>=7){var bn=btn(tn);for(var i=0;i<18;i++){var b=((bn>>i)&1)==1;M[Math.floor(i/3)][i%3+mc-8-3]=b;M[i%3+mc-8-3][Math.floor(i/3)]=b;}}
+  function sti(mask,test){var bi=bti((ecl<<3)|mask);for(var i=0;i<15;i++){var v=(!test&&((bi>>i)&1)==1);if(i<6)M[i][8]=v;else if(i<8)M[i+1][8]=v;else M[mc-15+i][8]=v;}for(var i=0;i<15;i++){var v=(!test&&((bi>>i)&1)==1);if(i<8)M[8][mc-i-1]=v;else if(i<9)M[8][15-i]=v;else M[8][15-i-1]=v;}M[mc-8][8]=!test;}
+  function lp(m){var p=0;for(var r=0;r<mc;r++){for(var c=0;c<mc;c++){var sc=0,dk=m[r][c];for(var dr=-1;dr<=1;dr++){if(r+dr<0||mc<=r+dr)continue;for(var dc=-1;dc<=1;dc++){if(c+dc<0||mc<=c+dc)continue;if(dr==0&&dc==0)continue;if(dk==m[r+dr][c+dc])sc++;}}if(sc>5)p+=3+sc-5;}for(var c=0;c<mc-1;c++){var k=0;if(m[r][c])k++;if(r+1<mc&&m[r+1][c])k++;if(m[r][c+1])k++;if(r+1<mc&&m[r+1][c+1])k++;if(k==0||k==4)p+=3;}}var dk=0;for(var c=0;c<mc;c++)for(var r=0;r<mc;r++)if(m[r][c])dk++;p+=Math.abs(100*dk/mc/mc-50)/5*10;return p;}
+  function buildData(mask){
+    var rs2=grs(tn,ecl),buf2=mkbuf(),d2=mkbyte(text);
+    buf2.put(4,4);buf2.put(d2.len(),lb(4,tn));d2.write(buf2);
+    var tot2=rs2.reduce(function(s,r){return s+r.dc;},0);
+    if(buf2.len()+4<=tot2*8)buf2.put(0,4);
+    while(buf2.len()%8!=0)buf2.bit(false);
+    while(buf2.len()<tot2*8){buf2.put(P0,8);if(buf2.len()>=tot2*8)break;buf2.put(P1,8);}
+    var off=0,mD=0,mEc=0,dc=[],ec=[];
+    for(var r=0;r<rs2.length;r++){
+      var dcn=rs2[r].dc,ecn=rs2[r].tc-dcn;mD=Math.max(mD,dcn);mEc=Math.max(mEc,ecn);
+      dc[r]=[];for(var i=0;i<dcn;i++)dc[r][i]=0xff&buf2.buf()[off++];
+      var rp=ecp(ecn),rw=poly(dc[r],rp.len()-1),mp=rw.mod(rp);
+      ec[r]=[];for(var i=0;i<rp.len()-1;i++){var mi=i+mp.len()-(rp.len()-1);ec[r][i]=(mi>=0)?mp.at(mi):0;}
+    }
+    var tot3=rs2.reduce(function(s,r){return s+r.tc;},0),data=new Array(tot3),idx=0;
+    for(var i=0;i<mD;i++)for(var r=0;r<rs2.length;r++)if(i<dc[r].length)data[idx++]=dc[r][i];
+    for(var i=0;i<mEc;i++)for(var r=0;r<rs2.length;r++)if(i<ec[r].length)data[idx++]=ec[r][i];
+    var inc=-1,row=mc-1,bi=7,by=0,fn=mkf(mask);
+    for(var col=mc-1;col>0;col-=2){if(col==6)col--;while(true){for(var c=0;c<2;c++){if(M[row][col-c]==null){var dark=false;if(by<data.length)dark=(((data[by])>>>bi)&1)==1;if(fn(row,col-c))dark=!dark;M[row][col-c]=dark;bi--;if(bi==-1){by++;bi=7;}}}row+=inc;if(row<0||mc<=row){row-=inc;inc=-inc;break;}}}
+  }
+  var bm=0,bl=0,SM=[];for(var i=0;i<mc;i++)SM[i]=M[i].slice();
+  for(var mask=0;mask<8;mask++){for(var i=0;i<mc;i++)M[i]=SM[i].slice();sti(mask,true);buildData(mask);var p=lp(M);if(mask==0||p<bl){bl=p;bm=mask;}}
+  for(var i=0;i<mc;i++)M[i]=SM[i].slice();buildData(bm);
+  var cv=document.createElement('canvas');cv.width=cv.height=mc*cs;
+  var cx=cv.getContext('2d');cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
+  cx.fillStyle='#000';for(var r=0;r<mc;r++)for(var c=0;c<mc;c++)if(M[r][c])cx.fillRect(c*cs,r*cs,cs,cs);
+  return cv;
+};
+})();
+</script>
+
+<!-- DOM -->
+<div class="flash" id="flash"></div>
+<div id="toast"></div>
+<div id="loader"><div class="spin"></div><div id="ltxt">ОБРАБОТКА…</div></div>
+
+<!-- СТАРТ -->
+<div class="screen" id="s-start">
+  <div class="logo">📷</div>
+  <div class="app-name">ВерифиКам</div>
+  <div class="app-sub">Верификационная съёмка с GPS и QR-подписью</div>
+  <div class="cid-box">Клиент: <span id="show-id">…</span></div>
+  <div class="perms">
+    <div class="prow"><div class="picon">📷</div><div style="flex:1"><div class="ptitle">Камера</div><div class="pdesc">Для съёмки</div></div><div class="pstate wait" id="p-cam">Ожидание</div></div>
+    <div class="prow"><div class="picon">📍</div><div style="flex:1"><div class="ptitle">Геолокация</div><div class="pdesc">GPS в QR</div></div><div class="pstate wait" id="p-gps">Ожидание</div></div>
+  </div>
+  <button class="btn-go" id="btn-go" onclick="onStart()" disabled>⏳ Загрузка…</button>
+  <button class="btn-skip" onclick="onStart()">Продолжить без настройки</button>
+  <div class="ios-hint" id="ios-hint"><b>iPhone:</b> нажми □↑ → «На экран "Домой"» → Добавить — и приложение появится как иконка</div>
+</div>
+
+<!-- КАМЕРА -->
+<div class="screen hidden" id="s-cam" style="justify-content:flex-start;align-items:stretch">
+  <div class="vf" id="vf" onclick="onTap(event)">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="grid"><div></div><div class="gv"></div><div class="gv"></div><div class="gh"></div><div class="gv gh"></div><div class="gv gh"></div><div class="gh"></div><div class="gv gh"></div><div class="gv gh"></div></div>
+    <div class="cr cr-tl"></div><div class="cr cr-tr"></div><div class="cr cr-bl"></div><div class="cr cr-br"></div>
+    <div id="fr"></div>
+    <div class="hud"><div class="htime" id="htime">00:00:00</div><div class="gbadge srch" id="gbadge">GPS…</div></div>
+
+    <!-- Кнопки на видоискателе -->
+    <div class="top-btns">
+      <button class="top-btn disabled" id="btn-torch" onclick="toggleTorch()">🔦 Вспышка</button>
+      <button class="top-btn disabled" id="btn-zoom" onclick="toggleZoom()">🔍 Зум</button>
+    </div>
+
+    <!-- Зум слайдер -->
+    <div class="zoom-row" id="zoom-row">
+      <span class="zoom-val" id="zval">1×</span>
+      <input class="zslider" id="zslider" type="range" min="1" max="5" step="0.1" value="1"
+        oninput="applyZoom(+this.value)"
+        ontouchstart="event.stopPropagation()"
+        onclick="event.stopPropagation()">
+      <span class="zoom-val">5×</span>
+    </div>
+
+    <div class="id-badge" id="id-badge"></div>
+
+    <!-- Уведомление после сохранения (для iOS) -->
+    <div class="notif" id="notif">
+      <img class="notif-img" id="notif-img" src="" alt="">
+      <div class="notif-title">✓ Фото верифицировано</div>
+      <div class="notif-hint" id="notif-hint">Нажмите Сохранить или удерживайте фото выше</div>
+      <div class="notif-btns">
+        <button class="notif-btn cls" onclick="closeNotif()">✕ Закрыть</button>
+        <button class="notif-btn dl" id="notif-dl" onclick="doSave()">↓ Сохранить</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="cam-bar">
+    <div class="bar-btn disabled" id="bar-torch" onclick="toggleTorch()">🔦</div>
+    <div class="shutter" id="shutter" onclick="shoot()"><div class="disc"></div></div>
+    <div class="bar-btn" id="bar-flip" onclick="flipCam()">⟳</div>
+  </div>
+</div>
+
+<!-- ПРЕВЬЮ (для Android — полноэкранный) -->
+<div class="screen hidden" id="s-preview" style="justify-content:flex-start;align-items:stretch">
+  <div class="pv-wrap"><img id="pv-img" src="" alt=""></div>
+  <div class="pv-bar">
+    <div class="pdot ok" id="pdot"></div>
+    <div class="ptxt" id="ptxt">Верификация…</div>
+    <div class="psig" id="psig"></div>
+  </div>
+  <div class="pv-actions">
+    <button class="btn-ret" onclick="retake()">✕ Переснять</button>
+    <button class="btn-sv" onclick="saveFromPreview()">↓ Сохранить</button>
+  </div>
+</div>
+
+<canvas id="cv" style="display:none"></canvas>
+
+<script>
+// ══════════════════════════════════════
+//  ЗАГРУЗКА CONFIG.JSON
+// ══════════════════════════════════════
+(async function loadConfig(){
+  try{
+    const r=await fetch('config.json?_='+Date.now());
+    if(r.ok){
+      const j=await r.json();
+      if(j.SECRET_KEY)CFG.SECRET_KEY=j.SECRET_KEY;
+      if(j.VER)CFG.VER=j.VER;
+      const urlId=new URLSearchParams(location.search).get('id');
+      CFG.CLIENT_ID=urlId||j.CLIENT_ID||CFG.CLIENT_ID;
+    }
+  }catch(e){
+    const urlId=new URLSearchParams(location.search).get('id');
+    if(urlId)CFG.CLIENT_ID=urlId;
+  }
+  document.getElementById('show-id').textContent=CFG.CLIENT_ID;
+  document.getElementById('id-badge').textContent='ID: '+CFG.CLIENT_ID;
+  const btn=document.getElementById('btn-go');
+  btn.disabled=false;btn.innerHTML='<span>📷</span> Открыть камеру';
+  // Показываем iOS инструкцию если не установлено
+  if(isIOS&&!isStandalone)document.getElementById('ios-hint').style.display='block';
+})();
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let stream=null,facingMode='environment',gps=null,camOk=false;
+let torchOn=false,torchOk=false;
+let zoomOk=false,zoomMin=1,zoomMax=1;
+let savedBlob=null,savedMeta=null;
+
+const video=document.getElementById('video'),shutter=document.getElementById('shutter');
+
+// Часы
+setInterval(()=>{
+  const n=new Date(),el=document.getElementById('htime');
+  if(el)el.textContent=p2(n.getHours())+':'+p2(n.getMinutes())+':'+p2(n.getSeconds());
+},1000);
+
+// ══════════════════════════════════════
+//  СТАРТ
+// ══════════════════════════════════════
+async function onStart(){
+  const btn=document.getElementById('btn-go');
+  btn.disabled=true;btn.textContent='Запуск…';
+  await startCam();
+  startGPS();
+  showScreen('s-cam');
+}
+
+// ══════════════════════════════════════
+//  КАМЕРА
+// ══════════════════════════════════════
+async function startCam(){
+  const pEl=document.getElementById('p-cam');
+  try{
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;torchOn=false;torchOk=false;zoomOk=false;}
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:facingMode},width:{ideal:1920},height:{ideal:1440}},
+      audio:false
+    });
+    video.srcObject=stream;
+    await video.play();
+    camOk=true;
+    pEl.textContent='Разрешено';pEl.className='pstate ok';
+
+    // Проверяем capabilities
+    const track=stream.getVideoTracks()[0];
+    if(track){
+      const caps=track.getCapabilities&&track.getCapabilities()||{};
+      // Torch
+      torchOk=!!caps.torch;
+      document.getElementById('btn-torch').classList.toggle('disabled',!torchOk);
+      document.getElementById('bar-torch').classList.toggle('disabled',!torchOk);
+      // Zoom
+      if(caps.zoom&&caps.zoom.max>1){
+        zoomOk=true;
+        zoomMin=caps.zoom.min||1;
+        zoomMax=Math.min(caps.zoom.max,8);
+        const sl=document.getElementById('zslider');
+        sl.min=zoomMin;sl.max=zoomMax;sl.value=1;
+        document.getElementById('btn-zoom').classList.remove('disabled');
+      }else{
+        document.getElementById('btn-zoom').classList.add('disabled');
+      }
+    }
+  }catch(err){
+    camOk=false;pEl.textContent='Отклонено';pEl.className='pstate no';
+    toast('Нужен доступ к камере — нажмите 🔒 в адресной строке','err');
+    console.error('Cam error:',err);
+  }
+}
+
+async function flipCam(){
+  if(torchOn)await applyTorch(false);
+  facingMode=facingMode==='environment'?'user':'environment';
+  camOk=false;await startCam();
+}
+
+// ══════════════════════════════════════
+//  ВСПЫШКА
+// ══════════════════════════════════════
+async function applyTorch(on){
+  if(!stream||!torchOk)return;
+  try{
+    const track=stream.getVideoTracks()[0];
+    await track.applyConstraints({advanced:[{torch:on}]});
+    torchOn=on;
+    ['btn-torch','bar-torch'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el)el.classList.toggle('on',on);
+    });
+    document.getElementById('btn-torch').textContent=on?'🔦 Вкл':'🔦 Вспышка';
+    document.getElementById('bar-torch').textContent=on?'💡':'🔦';
+  }catch(e){toast('Вспышка недоступна на этом устройстве');}
+}
+function toggleTorch(){
+  if(!torchOk){toast('Вспышка не поддерживается');return;}
+  applyTorch(!torchOn);
+}
+
+// ══════════════════════════════════════
+//  ЗУМ
+// ══════════════════════════════════════
+function toggleZoom(){
+  if(!zoomOk){toast('Зум не поддерживается');return;}
+  const row=document.getElementById('zoom-row');
+  row.classList.toggle('show');
+  document.getElementById('btn-zoom').classList.toggle('active',row.classList.contains('show'));
+}
+
+async function applyZoom(val){
+  document.getElementById('zval').textContent=parseFloat(val).toFixed(1)+'×';
+  if(!stream||!zoomOk)return;
+  try{
+    const track=stream.getVideoTracks()[0];
+    await track.applyConstraints({advanced:[{zoom:val}]});
+  }catch(e){}
+}
+
+// ══════════════════════════════════════
+//  GPS
+// ══════════════════════════════════════
+function startGPS(){
+  const badge=document.getElementById('gbadge'),pEl=document.getElementById('p-gps');
+  if(!navigator.geolocation){
+    badge.textContent='GPS —';badge.className='gbadge';
+    pEl.textContent='Нет';pEl.className='pstate no';return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos=>{
+      gps={lat:pos.coords.latitude.toFixed(5),lon:pos.coords.longitude.toFixed(5)};
+      badge.textContent='⌖ GPS';badge.className='gbadge ok';
+      pEl.textContent='Разрешено';pEl.className='pstate ok';
+    },
+    err=>{
+      badge.textContent='GPS —';badge.className='gbadge';
+      pEl.textContent='Отклонено';pEl.className='pstate no';
+    },
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
+// ══════════════════════════════════════
+//  ТАП → ФОКУС
+// ══════════════════════════════════════
+function onTap(e){
+  if(e.target.closest('.top-btns,.zoom-row,.notif,.bar-btn'))return;
+  const r=document.getElementById('fr'),rc=document.getElementById('vf').getBoundingClientRect();
+  r.style.left=(e.clientX-rc.left)+'px';r.style.top=(e.clientY-rc.top)+'px';
+  r.classList.remove('show');void r.offsetWidth;r.classList.add('show');
+  setTimeout(()=>r.classList.remove('show'),850);
+}
+
+// ══════════════════════════════════════
+//  СЪЁМКА — главная функция
+// ══════════════════════════════════════
+async function shoot(){
+  if(!camOk){await startCam();return;}
+  const fl=document.getElementById('flash');
+  fl.classList.add('go');setTimeout(()=>fl.classList.remove('go'),140);
+  shutter.classList.add('busy');showL('СНИМОК…');
+
+  try{
+    const mainCv=document.getElementById('cv'),cx=mainCv.getContext('2d');
+    const W=video.videoWidth||1280,H=video.videoHeight||960;
+    mainCv.width=W;mainCv.height=H;
+
+    // Рисуем кадр (зеркалим фронтальную)
+    if(facingMode==='user'){
+      cx.save();cx.translate(W,0);cx.scale(-1,1);cx.drawImage(video,0,0,W,H);cx.restore();
+    }else{
+      cx.drawImage(video,0,0,W,H);
+    }
+
+    // EXIF ориентация
+    const rawBlob=await canvasToBlob(mainCv,'image/jpeg',0.9);
+    const ori=await readExifOri(rawBlob);
+    const normCv=applyOrientation(mainCv,ori);
+    const fW=normCv.width,fH=normCv.height,fCx=normCv.getContext('2d');
+
+    // Метаданные и подпись
+    const gpsStr=gps?gps.lat+','+gps.lon:'NO_GPS';
+    const dateStr=isoNow(new Date());
+    const idAscii=tr(CFG.CLIENT_ID);
+    const payload=idAscii+'|'+dateStr+'|'+gpsStr;
+    const hmac=await hmacSign(CFG.SECRET_KEY,payload);
+    const qrTxt=idAscii+'|'+dateStr+'|'+gpsStr+'|'+hmac+'|'+CFG.VER;
+
+    showL('QR-КОД…');
+    stampQR(fCx,fW,fH,qrTxt,dateStr,gpsStr,hmac);
+
+    savedMeta={date:dateStr,gps:gpsStr,id:CFG.CLIENT_ID,hmac};
+
+    // Получаем финальный blob
+    savedBlob=await canvasToBlob(normCv,'image/jpeg',0.93);
+    const url=URL.createObjectURL(savedBlob);
+
+    hideL();shutter.classList.remove('busy');
+
+    if(isIOS){
+      // iOS: показываем превью с кнопкой сохранения
+      showNotif(url,hmac,gpsStr);
+    }else{
+      // Android: сразу показываем превью-экран
+      document.getElementById('pv-img').src=url;
+      document.getElementById('pdot').className='pdot '+(gpsStr!=='NO_GPS'?'ok':'warn');
+      document.getElementById('ptxt').textContent=(gpsStr!=='NO_GPS'?'✓ Верифицировано':'✓ Без GPS')+' · '+CFG.CLIENT_ID;
+      document.getElementById('psig').textContent=hmac.slice(0,8)+'…';
+      showScreen('s-preview');
+    }
+
+  }catch(err){
+    hideL();shutter.classList.remove('busy');
+    toast('Ошибка: '+err.message,'err');console.error(err);
+  }
+}
+
+// ══════════════════════════════════════
+//  УВЕДОМЛЕНИЕ (iOS)
+// ══════════════════════════════════════
+function showNotif(url,hmac,gpsStr){
+  document.getElementById('notif-img').src=url;
+  document.getElementById('notif-hint').textContent=
+    isIOS?'На iPhone: удерживайте фото → «Добавить в «Фото»»':'Нажмите Сохранить';
+  document.getElementById('notif').classList.add('show');
+}
+function closeNotif(){
+  document.getElementById('notif').classList.remove('show');
+}
+
+// ══════════════════════════════════════
+//  СОХРАНЕНИЕ ФАЙЛА
+// ══════════════════════════════════════
+function doSave(){
+  if(!savedBlob)return;
+  const n=new Date();
+  const fn='VERIFY_'+CFG.CLIENT_ID+'_'+n.getFullYear()+p2(n.getMonth()+1)+p2(n.getDate())+'_'+p2(n.getHours())+p2(n.getMinutes())+p2(n.getSeconds())+'.jpg';
+  if(isIOS){
+    // iOS: открываем в новой вкладке — пользователь удерживает → Добавить в Фото
+    const url=URL.createObjectURL(savedBlob);
+    window.open(url,'_blank');
+    toast('Удерживайте фото в новой вкладке → «Добавить в «Фото»»');
+    closeNotif();
+  }else{
+    // Android: стандартное скачивание
+    const url=URL.createObjectURL(savedBlob);
+    const a=document.createElement('a');a.href=url;a.download=fn;
+    document.body.appendChild(a);a.click();document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),5000);
+    toast('📸 Сохранено в Загрузки');
+    closeNotif();
+    retake();
+  }
+}
+
+function saveFromPreview(){doSave();}
+
+function retake(){
+  showScreen('s-cam');
+  savedBlob=null;savedMeta=null;
+  document.getElementById('pv-img').src='';
+}
+
+// ══════════════════════════════════════
+//  EXIF ORIENTATION
+// ══════════════════════════════════════
+function readExifOri(blob){
+  return new Promise(resolve=>{
+    const rd=new FileReader();
+    rd.onload=e=>{
+      try{
+        const v=new DataView(e.target.result);
+        if(v.getUint16(0)!==0xFFD8){resolve(1);return;}
+        let off=2;
+        while(off<v.byteLength-2){
+          const mk=v.getUint16(off);
+          if(mk===0xFFE1){
+            const eo=off+4;
+            if(v.getUint8(eo)===0x45&&v.getUint8(eo+1)===0x78){
+              const ts=eo+6,le=v.getUint16(ts)===0x4949;
+              const gu=(o,s)=>s===2?v.getUint16(o,le):v.getUint32(o,le);
+              const ifd=ts+gu(ts+4,4),cnt=gu(ifd,2);
+              for(let i=0;i<cnt;i++){const e=ifd+2+i*12;if(gu(e,2)===0x0112){resolve(gu(e+8,2));return;}}
+            }
+            off+=2+v.getUint16(off+2);
+          }else if((mk&0xFF00)===0xFF00)off+=2+v.getUint16(off+2);
+          else break;
+        }
+      }catch(e){}
+      resolve(1);
+    };
+    rd.onerror=()=>resolve(1);
+    rd.readAsArrayBuffer(blob.slice(0,65536));
+  });
+}
+
+function applyOrientation(src,ori){
+  const W=src.width,H=src.height;
+  const cv=document.createElement('canvas');
+  const cx=cv.getContext('2d');
+  if(ori>=5&&ori<=8){cv.width=H;cv.height=W;}else{cv.width=W;cv.height=H;}
+  cx.save();
+  switch(ori){
+    case 2:cx.transform(-1,0,0,1,W,0);break;
+    case 3:cx.transform(-1,0,0,-1,W,H);break;
+    case 4:cx.transform(1,0,0,-1,0,H);break;
+    case 5:cx.transform(0,1,1,0,0,0);break;
+    case 6:cx.transform(0,1,-1,0,H,0);break;
+    case 7:cx.transform(0,-1,-1,0,H,W);break;
+    case 8:cx.transform(0,-1,1,0,0,W);break;
+  }
+  cx.drawImage(src,0,0);cx.restore();
+  return cv;
+}
+
+// ══════════════════════════════════════
+//  QR STAMP — всегда нижний левый угол
+// ══════════════════════════════════════
+function stampQR(cx,W,H,qrTxt,dateStr,gpsStr,hmac){
+  const ms=Math.min(W,H);
+  const qrSz=Math.max(Math.round(ms*.17),90);
+  const mg=Math.round(ms*.02),pd=Math.round(qrSz*.1);
+  const fs=Math.max(Math.round(qrSz*.09),10),lh=fs+5;
+  const bW=qrSz+pd*2,bH=qrSz+pd*2+lh*3+pd;
+  const bx=mg,by=H-mg-bH;  // нижний левый
+
+  const cs=Math.max(Math.ceil(qrSz/33),2);
+  const qrCv=window.makeQR(qrTxt,cs);
+
+  cx.shadowColor='rgba(0,0,0,.6)';cx.shadowBlur=18;cx.shadowOffsetX=2;cx.shadowOffsetY=2;
+  cx.fillStyle='rgba(255,255,255,.97)';
+  rrect(cx,bx,by,bW,bH,10);cx.fill();
+  cx.shadowColor='transparent';cx.shadowBlur=0;
+  cx.drawImage(qrCv,bx+pd,by+pd,qrSz,qrSz);
+
+  const tx=bx+pd;let ty=by+pd+qrSz+fs+3;
+  cx.textAlign='left';
+  cx.fillStyle='#000';cx.font='bold '+fs+'px monospace';
+  cx.fillText(dateStr.replace('T',' ').slice(0,16),tx,ty);ty+=lh;
+  cx.fillStyle='#333';cx.font=fs+'px monospace';
+  cx.fillText(gpsStr==='NO_GPS'?'GPS: —':gpsStr.replace(',',', '),tx,ty);ty+=lh;
+  cx.fillStyle='#888';cx.fillText('SIG: '+hmac.slice(0,12)+'…',tx,ty);
+}
+
+function rrect(cx,x,y,w,h,r){
+  cx.beginPath();cx.moveTo(x+r,y);cx.lineTo(x+w-r,y);cx.quadraticCurveTo(x+w,y,x+w,y+r);
+  cx.lineTo(x+w,y+h-r);cx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  cx.lineTo(x+r,y+h);cx.quadraticCurveTo(x,y+h,x,y+h-r);
+  cx.lineTo(x,y+r);cx.quadraticCurveTo(x,y,x+r,y);cx.closePath();
+}
+
+// ══════════════════════════════════════
+//  ВСПОМОГАТЕЛЬНЫЕ
+// ══════════════════════════════════════
+function canvasToBlob(cv,type,q){
+  return new Promise(res=>cv.toBlob(res,type,q));
+}
+
+function showScreen(id){
+  ['s-start','s-cam','s-preview'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));
+}
+
+async function hmacSign(key,msg){
+  const enc=new TextEncoder();
+  const k=await crypto.subtle.importKey('raw',enc.encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const s=await crypto.subtle.sign('HMAC',k,enc.encode(msg));
+  return Array.from(new Uint8Array(s)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase().slice(0,16);
+}
+
+function p2(n){return String(n).padStart(2,'0');}
+function isoNow(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds());}
+function showL(t){document.getElementById('ltxt').textContent=t;document.getElementById('loader').classList.add('show');}
+function hideL(){document.getElementById('loader').classList.remove('show');}
+function toast(msg,type){
+  const t=document.getElementById('toast');t.textContent=msg;t.className=type||'';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+// Service Worker для офлайн
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
