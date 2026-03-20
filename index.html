@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ВерифиКам">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<title>ВерифиКам</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{width:100%;height:100%;background:#000;font-family:-apple-system,sans-serif;overflow:hidden;color:#fff}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.hidden{display:none!important}
+
+/* ── СТАРТ ── */
+#s-start{background:linear-gradient(170deg,#0d0d14,#000);padding:32px 24px;gap:18px}
+.logo{width:88px;height:88px;border-radius:20px;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:44px;box-shadow:0 8px 32px rgba(0,0,0,.6);flex-shrink:0}
+.app-name{font-size:28px;font-weight:700;letter-spacing:-.02em}
+.app-sub{font-size:13px;color:rgba(255,255,255,.4);text-align:center;line-height:1.6;max-width:260px}
+.cid-box{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:10px 18px;font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.06em}
+.cid-box span{color:#f5c518;font-weight:600}
+.perms{width:100%;max-width:300px;display:flex;flex-direction:column;gap:8px}
+.prow{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:11px 14px}
+.picon{font-size:20px;flex-shrink:0}
+.ptitle{font-size:13px;font-weight:600;color:rgba(255,255,255,.85)}
+.pdesc{font-size:11px;color:rgba(255,255,255,.4)}
+.pstate{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:99px;flex-shrink:0}
+.pstate.wait{background:rgba(255,255,255,.08);color:rgba(255,255,255,.4)}
+.pstate.ok{background:rgba(74,222,128,.15);color:#4ade80}
+.pstate.no{background:rgba(255,100,100,.15);color:#f87171}
+.btn-main{width:100%;max-width:300px;padding:18px;border-radius:14px;background:#f5c518;border:none;color:#000;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:background .12s,transform .09s}
+.btn-main:active{background:#d4a800;transform:scale(.97)}
+.btn-main:disabled{background:rgba(255,255,255,.2);color:rgba(0,0,0,.4)}
+.btn-ghost{background:none;border:none;color:rgba(255,255,255,.35);font-size:13px;cursor:pointer;padding:8px;margin-top:-8px}
+.ios-hint{display:none;width:100%;max-width:300px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.25);border-radius:12px;padding:14px;font-size:12px;color:rgba(255,255,255,.6);line-height:1.8}
+.ios-hint b{color:#f5c518}
+
+/* ── КАМЕРА ── */
+#s-cam{background:#000;justify-content:flex-start;align-items:stretch}
+.vf{flex:1;position:relative;overflow:hidden;background:#0a0a0a}
+#video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.grid{position:absolute;inset:0;z-index:2;pointer-events:none;display:grid;grid-template-columns:1fr 1fr 1fr;grid-template-rows:1fr 1fr 1fr}
+.gv{border-left:1px solid rgba(255,255,255,.08)}
+.gh{border-top:1px solid rgba(255,255,255,.08)}
+.cr{position:absolute;width:20px;height:20px;z-index:3}
+.cr-tl{top:12px;left:12px;border-top:2px solid rgba(255,255,255,.65);border-left:2px solid rgba(255,255,255,.65)}
+.cr-tr{top:12px;right:12px;border-top:2px solid rgba(255,255,255,.65);border-right:2px solid rgba(255,255,255,.65)}
+.cr-bl{bottom:12px;left:12px;border-bottom:2px solid rgba(255,255,255,.65);border-left:2px solid rgba(255,255,255,.65)}
+.cr-br{bottom:12px;right:12px;border-bottom:2px solid rgba(255,255,255,.65);border-right:2px solid rgba(255,255,255,.65)}
+#fr{position:absolute;width:64px;height:64px;border:1.5px solid #f5c518;border-radius:2px;pointer-events:none;opacity:0;transform:translate(-50%,-50%) scale(1.4);transition:opacity .1s,transform .16s;z-index:4}
+#fr.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.hud{position:absolute;top:0;left:0;right:0;padding:max(env(safe-area-inset-top),14px) 14px 0;display:flex;align-items:center;justify-content:space-between;z-index:5;pointer-events:none}
+.htime{font-size:13px;font-weight:600;color:rgba(255,255,255,.9);letter-spacing:.05em;text-shadow:0 1px 8px #000;font-variant-numeric:tabular-nums}
+.gbadge{padding:4px 10px;border-radius:5px;font-size:10px;font-weight:600;letter-spacing:.07em;backdrop-filter:blur(8px);background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.13);color:rgba(255,255,255,.5);transition:all .4s}
+.gbadge.ok{color:#4ade80;border-color:rgba(74,222,128,.4);background:rgba(0,30,15,.65)}
+.gbadge.srch{color:#fbbf24;border-color:rgba(251,191,36,.35);animation:gbl 1.1s ease infinite}
+@keyframes gbl{0%,100%{opacity:1}50%{opacity:.3}}
+#btn-flip{position:absolute;top:max(env(safe-area-inset-top),14px);left:50%;transform:translateX(-50%);z-index:5;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:5px 14px;color:rgba(255,255,255,.75);font-size:12px;letter-spacing:.05em;cursor:pointer;backdrop-filter:blur(8px)}
+#btn-flip:active{background:rgba(255,255,255,.2)}
+.id-badge{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:5;background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:4px 14px;color:rgba(255,255,255,.4);font-size:10px;letter-spacing:.07em;backdrop-filter:blur(8px);white-space:nowrap;pointer-events:none}
+
+/* Статус авто-сохранения на экране камеры */
+.save-status{position:absolute;bottom:46px;left:50%;transform:translateX(-50%);z-index:5;
+  background:rgba(74,222,128,.15);border:1px solid rgba(74,222,128,.3);
+  border-radius:99px;padding:4px 14px;font-size:11px;color:#4ade80;
+  letter-spacing:.05em;pointer-events:none;opacity:0;transition:opacity .4s;white-space:nowrap}
+.save-status.show{opacity:1}
+
+.cam-bar{background:#000;flex-shrink:0;padding:14px 0 max(28px,env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:center}
+.shutter{width:80px;height:80px;border-radius:50%;border:3px solid rgba(255,255,255,.8);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s}
+.shutter:active{transform:scale(.88)}
+.disc{width:65px;height:65px;border-radius:50%;background:#fff;transition:background .08s,transform .08s}
+.shutter:active .disc{background:#ccc;transform:scale(.9)}
+.shutter.busy .disc{background:#f5c518;animation:sp .5s ease infinite}
+@keyframes sp{0%,100%{transform:scale(1)}50%{transform:scale(.87)}}
+
+/* ── ОБЩЕЕ ── */
+.flash{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:99;transition:opacity .05s}
+.flash.go{opacity:1}
+#toast{position:fixed;bottom:100px;left:50%;transform:translateX(-50%) translateY(16px);background:rgba(10,10,10,.97);color:#fff;font-size:13px;font-weight:500;padding:12px 22px;border-radius:99px;opacity:0;pointer-events:none;z-index:200;transition:opacity .2s,transform .2s;white-space:nowrap;border:1px solid rgba(255,255,255,.09);backdrop-filter:blur(16px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.err{border-color:rgba(248,113,113,.4)}
+#loader{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px}
+#loader.show{display:flex}
+.spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(255,255,255,.1);border-top-color:#f5c518;animation:spin .65s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#ltxt{font-size:12px;color:rgba(255,255,255,.55);letter-spacing:.08em}
+</style>
+</head>
+<body>
+
+<script>
+// ════════════════════════════════════════════════
+//  ТРАНСЛИТЕРАЦИЯ — убираем кириллицу из QR
+// ════════════════════════════════════════════════
+const TR={'А':'A','Б':'B','В':'V','Г':'G','Д':'D','Е':'E','Ё':'YO','Ж':'ZH','З':'Z','И':'I','Й':'Y','К':'K','Л':'L','М':'M','Н':'N','О':'O','П':'P','Р':'R','С':'S','Т':'T','У':'U','Ф':'F','Х':'KH','Ц':'TS','Ч':'CH','Ш':'SH','Щ':'SCH','Ъ':'','Ы':'Y','Ь':'','Э':'E','Ю':'YU','Я':'YA','а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'kh','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+function translit(s){return s.split('').map(c=>TR[c]!==undefined?TR[c]:c).join('');}
+
+// CFG — загружается из config.json
+let CFG = { SECRET_KEY:'', CLIENT_ID:'CLIENT_001', VER:'3.0' };
+</script>
+
+<!-- ════════════════════════════════════════
+     ВСТРОЕННЫЙ QR ГЕНЕРАТОР (без CDN, офлайн)
+     ════════════════════════════════════════ -->
+<script>
+(function(){
+"use strict";
+var PAD0=0xEC,PAD1=0x11;
+var QRErrorCorrectionLevel={L:1,M:0,Q:3,H:2};
+var QRMath={EXP_TABLE:new Array(256),LOG_TABLE:new Array(256)};
+for(var i=0;i<8;i++)QRMath.EXP_TABLE[i]=1<<i;
+for(var i=8;i<256;i++)QRMath.EXP_TABLE[i]=QRMath.EXP_TABLE[i-4]^QRMath.EXP_TABLE[i-5]^QRMath.EXP_TABLE[i-6]^QRMath.EXP_TABLE[i-8];
+for(var i=0;i<255;i++)QRMath.LOG_TABLE[QRMath.EXP_TABLE[i]]=i;
+QRMath.glog=function(n){if(n<1)throw new Error('glog('+n+')');return QRMath.LOG_TABLE[n];};
+QRMath.gexp=function(n){while(n<0)n+=255;while(n>=256)n-=255;return QRMath.EXP_TABLE[n];};
+function qrPoly(num,shift){var offset=0;while(offset<num.length&&num[offset]==0)offset++;var a=new Array(num.length-offset+shift);for(var i=0;i<num.length-offset;i++)a[i]=num[i+offset];return{getAt:function(i){return a[i];},getLength:function(){return a.length;},multiply:function(e){var n=new Array(this.getLength()+e.getLength()-1);for(var i=0;i<this.getLength();i++)for(var j=0;j<e.getLength();j++)n[i+j]^=QRMath.gexp(QRMath.glog(this.getAt(i))+QRMath.glog(e.getAt(j)));return qrPoly(n,0);},mod:function(e){if(this.getLength()-e.getLength()<0)return this;var r=QRMath.glog(this.getAt(0))-QRMath.glog(e.getAt(0));var n=new Array(this.getLength());for(var i=0;i<this.getLength();i++)n[i]=this.getAt(i);for(var i=0;i<e.getLength();i++)n[i]^=QRMath.gexp(QRMath.glog(e.getAt(i))+r);return qrPoly(n,0).mod(e);}};}
+var PATTERN_POS=[[],[6,18],[6,22],[6,26],[6,30],[6,34],[6,22,38],[6,24,42],[6,26,46],[6,28,50],[6,30,54],[6,32,58],[6,34,62],[6,26,46,66],[6,26,48,70],[6,26,50,74],[6,30,54,78],[6,30,56,82],[6,30,58,86],[6,34,62,90],[6,28,50,72,94],[6,26,50,74,98],[6,30,54,78,102],[6,28,54,80,106],[6,32,58,86,110],[6,30,58,86,114],[6,34,62,90,118],[6,26,50,74,98,122],[6,30,54,78,102,126],[6,26,52,78,104,130],[6,30,56,82,108,134],[6,34,60,86,112,138],[6,30,58,86,114,142],[6,34,62,90,118,146],[6,30,54,78,102,126,150],[6,24,50,76,102,128,154],[6,28,54,80,106,132,158],[6,32,58,84,110,136,162],[6,26,54,82,110,138,166],[6,30,58,86,114,142,170]];
+var G15=(1<<10)|(1<<8)|(1<<5)|(1<<4)|(1<<2)|(1<<1)|(1<<0),G18=(1<<12)|(1<<11)|(1<<10)|(1<<9)|(1<<8)|(1<<5)|(1<<2)|(1<<0),G15M=(1<<14)|(1<<12)|(1<<10)|(1<<4)|(1<<1);
+function bchDig(d){var n=0;while(d!=0){n++;d>>>=1;}return n;}
+function bchTypeInfo(d){var x=d<<10;while(bchDig(x)-bchDig(G15)>=0)x^=(G15<<(bchDig(x)-bchDig(G15)));return((d<<10)|x)^G15M;}
+function bchTypeNum(d){var x=d<<12;while(bchDig(x)-bchDig(G18)>=0)x^=(G18<<(bchDig(x)-bchDig(G18)));return(d<<12)|x;}
+function getMaskFn(p){switch(p){case 0:return function(i,j){return(i+j)%2==0;};case 1:return function(i,j){return i%2==0;};case 2:return function(i,j){return j%3==0;};case 3:return function(i,j){return(i+j)%3==0;};case 4:return function(i,j){return(Math.floor(i/2)+Math.floor(j/3))%2==0;};case 5:return function(i,j){return(i*j)%2+(i*j)%3==0;};case 6:return function(i,j){return((i*j)%2+(i*j)%3)%2==0;};case 7:return function(i,j){return((i*j)%3+(i+j)%2)%2==0;};}}
+function getECP(l){var a=qrPoly([1],0);for(var i=0;i<l;i++)a=a.multiply(qrPoly([1,QRMath.gexp(i)],0));return a;}
+function lenBits(mode,t){if(t<10)return mode==1?10:mode==2?9:8;if(t<27)return mode==1?12:mode==2?11:16;return mode==1?14:mode==2?13:16;}
+var RS_TABLE=[[1,26,19],[1,26,16],[1,26,13],[1,26,9],[1,44,34],[1,44,28],[1,44,22],[1,44,16],[1,70,55],[1,70,44],[2,35,17],[2,35,13],[1,100,80],[2,50,32],[2,50,24],[4,25,9],[1,134,108],[2,67,43],[2,33,15,2,34,16],[2,33,11,2,34,12],[2,86,68],[4,43,27],[4,43,19],[4,43,15],[2,98,78],[4,49,31],[2,32,14,4,33,15],[4,39,13,1,40,14],[2,121,97],[2,60,38,2,61,39],[4,40,18,2,41,19],[4,40,14,2,41,15],[2,146,116],[3,58,36,2,59,37],[4,36,16,4,37,17],[4,36,12,4,37,13],[2,86,68,2,87,69],[4,69,43,1,70,44],[6,43,19,2,44,20],[6,43,15,2,44,16],[4,101,81],[1,80,50,4,81,51],[4,50,22,4,51,23],[3,36,12,8,37,13],[2,116,92,2,117,93],[6,58,36,2,59,37],[4,46,20,6,47,21],[7,42,14,4,43,15],[4,133,107],[8,59,37,1,60,38],[8,44,20,4,45,21],[12,33,11,4,34,12],[3,145,115,1,146,116],[4,64,40,5,65,41],[11,36,16,5,37,17],[11,36,12,5,37,13],[5,109,87,1,110,88],[5,65,41,5,66,42],[5,54,24,7,55,25],[11,36,12],[5,122,98,1,123,99],[7,73,45,3,74,46],[15,43,19,2,44,20],[3,45,15,13,46,16],[1,135,107,5,136,108],[10,74,46,1,75,47],[1,50,22,15,51,23],[2,42,14,17,43,15],[5,150,120,1,151,121],[9,69,43,4,70,44],[17,50,22,1,51,23],[2,42,14,19,43,15],[3,141,113,4,142,114],[3,70,44,11,71,45],[17,47,21,4,48,22],[9,39,13,16,40,14],[3,135,107,5,136,108],[3,67,41,13,68,42],[15,54,24,5,55,25],[15,43,15,10,44,16],[4,144,116,4,145,117],[17,68,42],[17,50,22,6,51,23],[19,46,16,6,47,17],[2,139,111,7,140,112],[17,74,46],[7,54,24,16,55,25],[34,37,13],[4,151,121,5,152,122],[4,75,47,14,76,48],[11,54,24,14,55,25],[16,45,15,14,46,16],[6,147,117,4,148,118],[6,73,45,14,74,46],[11,54,24,16,55,25],[30,46,16,2,47,17],[8,132,106,4,133,107],[8,75,47,13,76,48],[7,54,24,22,55,25],[22,45,15,13,46,16],[10,142,114,2,143,115],[19,74,46,4,75,47],[28,50,22,6,51,23],[33,46,16,4,47,17],[8,152,122,4,153,123],[22,73,45,3,74,46],[8,53,23,26,54,24],[12,45,15,28,46,16],[3,147,117,10,148,118],[3,73,45,23,74,46],[4,54,24,31,55,25],[11,45,15,31,46,16],[7,146,116,7,147,117],[21,73,45,7,74,46],[1,53,23,37,54,24],[19,45,15,26,46,16],[5,145,115,10,146,116],[19,75,47,10,76,48],[15,54,24,25,55,25],[23,45,15,25,46,16],[13,145,115,3,146,116],[2,74,46,29,75,47],[42,54,24,1,55,25],[23,45,15,28,46,16],[17,145,115],[10,74,46,23,75,47],[10,54,24,35,55,25],[19,45,15,35,46,16],[17,145,115,1,146,116],[14,74,46,21,75,47],[29,54,24,19,55,25],[11,45,15,46,46,16],[13,145,115,6,146,116],[14,74,46,23,75,47],[44,54,24,7,55,25],[59,46,16,1,47,17],[12,151,121,7,152,122],[12,75,47,26,76,48],[39,54,24,14,55,25],[22,45,15,41,46,16],[6,151,121,14,152,122],[6,75,47,34,76,48],[46,54,24,10,55,25],[2,45,15,64,46,16],[17,152,122,4,153,123],[29,74,46,14,75,47],[49,54,24,10,55,25],[24,45,15,46,46,16],[4,152,122,18,153,123],[13,74,46,32,75,47],[48,54,24,14,55,25],[42,45,15,32,46,16],[20,147,117,4,148,118],[40,75,47,7,76,48],[43,54,24,22,55,25],[10,45,15,67,46,16],[19,148,118,6,149,119],[18,75,47,31,76,48],[34,54,24,34,55,25],[20,45,15,61,46,16]];
+function getRSBlocks(tn,ecl){var t=RS_TABLE[(tn-1)*4+(ecl==1?0:ecl==0?1:ecl==3?2:3)];if(!t)throw new Error('bad rs');var r=[];for(var i=0;i<t.length/3;i++)for(var j=0;j<t[i*3];j++)r.push({totalCount:t[i*3+1],dataCount:t[i*3+2]});return r;}
+function qrBitBuf(){var buf=[],len=0;return{getBuffer:function(){return buf;},getLengthInBits:function(){return len;},put:function(n,l){for(var i=0;i<l;i++)this.putBit(((n>>>(l-i-1))&1)==1);},putBit:function(b){var bi=Math.floor(len/8);if(buf.length<=bi)buf.push(0);if(b)buf[bi]|=(0x80>>(len%8));len++;}};}
+function q8bit(data){var bytes=[];for(var i=0;i<data.length;i++){var c=data.charCodeAt(i);if(c<128)bytes.push(c);else if(c<2048){bytes.push(0xC0|(c>>6));bytes.push(0x80|(c&0x3F));}else{bytes.push(0xE0|(c>>12));bytes.push(0x80|((c>>6)&0x3F));bytes.push(0x80|(c&0x3F));}}return{getMode:function(){return 4;},getLength:function(){return bytes.length;},write:function(buf){for(var i=0;i<bytes.length;i++)buf.put(bytes[i],8);}};}
+window.makeQR=function(text,cellSize){
+  var ecl=QRErrorCorrectionLevel.M;
+  var tn=1;
+  for(;tn<=40;tn++){
+    var rsb=getRSBlocks(tn,ecl),buf=qrBitBuf(),d=q8bit(text);
+    buf.put(4,4);buf.put(d.getLength(),lenBits(4,tn));d.write(buf);
+    var total=0;for(var i=0;i<rsb.length;i++)total+=rsb[i].dataCount;
+    if(buf.getLengthInBits()<=total*8)break;
+  }
+  var mc=tn*4+17,mods=[];
+  for(var i=0;i<mc;i++){mods[i]=new Array(mc);for(var j=0;j<mc;j++)mods[i][j]=null;}
+  function probe(r,c){for(var dr=-1;dr<=7;dr++){if(r+dr<0||mc<=r+dr)continue;for(var dc=-1;dc<=7;dc++){if(c+dc<0||mc<=c+dc)continue;mods[r+dr][c+dc]=((0<=dr&&dr<=6&&dc==0)||(0<=dr&&dr<=6&&dc==6)||(dr==0&&0<=dc&&dc<=6)||(dr==6&&0<=dc&&dc<=6)||(2<=dr&&dr<=4&&2<=dc&&dc<=4));}}
+  }
+  probe(0,0);probe(mc-7,0);probe(0,mc-7);
+  var pp=PATTERN_POS[tn-1];for(var i=0;i<pp.length;i++)for(var j=0;j<pp.length;j++){var pr=pp[i],pc=pp[j];if(mods[pr][pc]!=null)continue;for(var dr=-2;dr<=2;dr++)for(var dc=-2;dc<=2;dc++)mods[pr+dr][pc+dc]=(dr==-2||dr==2||dc==-2||dc==2||dr==0&&dc==0);}
+  for(var r=8;r<mc-8;r++)if(mods[r][6]==null)mods[r][6]=(r%2==0);
+  for(var c=8;c<mc-8;c++)if(mods[6][c]==null)mods[6][c]=(c%2==0);
+  if(tn>=7){var bn=bchTypeNum(tn);for(var i=0;i<18;i++){var b=((bn>>i)&1)==1;mods[Math.floor(i/3)][i%3+mc-8-3]=b;mods[i%3+mc-8-3][Math.floor(i/3)]=b;}}
+  function setTypeInfo(mask,test){var bi=bchTypeInfo((ecl<<3)|mask);for(var i=0;i<15;i++){var b=(!test&&((bi>>i)&1)==1);if(i<6)mods[i][8]=b;else if(i<8)mods[i+1][8]=b;else mods[mc-15+i][8]=b;}for(var i=0;i<15;i++){var b=(!test&&((bi>>i)&1)==1);if(i<8)mods[8][mc-i-1]=b;else if(i<9)mods[8][15-i-1+1]=b;else mods[8][15-i-1]=b;}mods[mc-8][8]=!test;}
+  function lostPt(m){var lp=0;for(var r=0;r<mc;r++){for(var c=0;c<mc;c++){var sc=0,dk=m[r][c];for(var dr=-1;dr<=1;dr++){if(r+dr<0||mc<=r+dr)continue;for(var dc=-1;dc<=1;dc++){if(c+dc<0||mc<=c+dc)continue;if(dr==0&&dc==0)continue;if(dk==m[r+dr][c+dc])sc++;}}if(sc>5)lp+=3+sc-5;}for(var c=0;c<mc-1;c++){var cnt=0;if(m[r][c])cnt++;if(m[r+1<mc?r+1:r][c])cnt++;if(m[r][c+1])cnt++;if(m[r+1<mc?r+1:r][c+1])cnt++;if(cnt==0||cnt==4)lp+=3;}}var dk=0;for(var c=0;c<mc;c++)for(var r=0;r<mc;r++)if(m[r][c])dk++;lp+=Math.abs(100*dk/mc/mc-50)/5*10;return lp;}
+  function buildData(mask){
+    var rsb=getRSBlocks(tn,ecl),buf=qrBitBuf(),d=q8bit(text);
+    buf.put(4,4);buf.put(d.getLength(),lenBits(4,tn));d.write(buf);
+    var total=0;for(var i=0;i<rsb.length;i++)total+=rsb[i].dataCount;
+    if(buf.getLengthInBits()+4<=total*8)buf.put(0,4);
+    while(buf.getLengthInBits()%8!=0)buf.putBit(false);
+    while(buf.getLengthInBits()<total*8){buf.put(PAD0,8);if(buf.getLengthInBits()>=total*8)break;buf.put(PAD1,8);}
+    var offset=0,maxDc=0,maxEc=0,dcdata=[],ecdata=[];
+    for(var r=0;r<rsb.length;r++){var dc=rsb[r].dataCount,ec=rsb[r].totalCount-dc;maxDc=Math.max(maxDc,dc);maxEc=Math.max(maxEc,ec);dcdata[r]=[];for(var i=0;i<dc;i++)dcdata[r][i]=0xff&buf.getBuffer()[offset++];var rp=getECP(ec),raw=qrPoly(dcdata[r],rp.getLength()-1),mp=raw.mod(rp);ecdata[r]=[];for(var i=0;i<rp.getLength()-1;i++){var mi=i+mp.getLength()-ecdata[r].length-(rp.getLength()-1);ecdata[r][i]=(mi>=0)?mp.getAt(mi):0;}}
+    var total2=0;for(var i=0;i<rsb.length;i++)total2+=rsb[i].totalCount;
+    var data=new Array(total2),idx=0;
+    for(var i=0;i<maxDc;i++)for(var r=0;r<rsb.length;r++)if(i<dcdata[r].length)data[idx++]=dcdata[r][i];
+    for(var i=0;i<maxEc;i++)for(var r=0;r<rsb.length;r++)if(i<ecdata[r].length)data[idx++]=ecdata[r][i];
+    var mods2=[];for(var i=0;i<mc;i++){mods2[i]=mods[i].slice();}
+    setTypeInfo(mask,false);
+    var inc=-1,row=mc-1,bi=7,by=0,mf=getMaskFn(mask);
+    for(var col=mc-1;col>0;col-=2){if(col==6)col--;while(true){for(var c=0;c<2;c++){if(mods[row][col-c]==null){var dark=false;if(by<data.length)dark=(((data[by])>>>bi)&1)==1;if(mf(row,col-c))dark=!dark;mods[row][col-c]=dark;bi--;if(bi==-1){by++;bi=7;}}}row+=inc;if(row<0||mc<=row){row-=inc;inc=-inc;break;}}}
+  }
+  var bestMask=0,bestLost=0;
+  var savedMods=[];for(var i=0;i<mc;i++)savedMods[i]=mods[i].slice();
+  for(var mask=0;mask<8;mask++){
+    for(var i=0;i<mc;i++)mods[i]=savedMods[i].slice();
+    setTypeInfo(mask,true);buildData(mask);
+    var lp=lostPt(mods);if(mask==0||lp<bestLost){bestLost=lp;bestMask=mask;}
+  }
+  for(var i=0;i<mc;i++)mods[i]=savedMods[i].slice();
+  buildData(bestMask);
+  var cv=document.createElement('canvas');
+  cv.width=cv.height=mc*cellSize;
+  var cx=cv.getContext('2d');
+  cx.fillStyle='#fff';cx.fillRect(0,0,cv.width,cv.height);
+  cx.fillStyle='#000';
+  for(var r=0;r<mc;r++)for(var c=0;c<mc;c++)if(mods[r][c])cx.fillRect(c*cellSize,r*cellSize,cellSize,cellSize);
+  return cv;
+};
+})();
+</script>
+
+<!-- DOM -->
+<div class="flash" id="flash"></div>
+<div id="toast"></div>
+<div id="loader"><div class="spin"></div><div id="ltxt">ОБРАБОТКА...</div></div>
+
+<!-- СТАРТ -->
+<div class="screen" id="s-start">
+  <div class="logo">📷</div>
+  <div class="app-name">ВерифиКам</div>
+  <div class="app-sub">Нажмите кнопку — браузер запросит доступ к камере и геолокации</div>
+  <div class="cid-box">Клиент: <span id="show-id">загрузка…</span></div>
+  <div class="perms">
+    <div class="prow"><div class="picon">📷</div><div style="flex:1"><div class="ptitle">Камера</div><div class="pdesc">Для съёмки</div></div><div class="pstate wait" id="p-cam">Ожидание</div></div>
+    <div class="prow"><div class="picon">📍</div><div style="flex:1"><div class="ptitle">Геолокация</div><div class="pdesc">GPS в QR</div></div><div class="pstate wait" id="p-gps">Ожидание</div></div>
+  </div>
+  <button class="btn-main" id="btn-start" onclick="onStart()" disabled>⏳ Загрузка…</button>
+  <button class="btn-ghost" onclick="onStart()">Пропустить</button>
+  <div class="ios-hint" id="ios-hint"><b>iPhone:</b> нажми □↑ → «На экран "Домой"» → Добавить</div>
+</div>
+
+<!-- КАМЕРА -->
+<div class="screen hidden" id="s-cam" style="justify-content:flex-start;align-items:stretch">
+  <div class="vf" id="vf" onclick="onTap(event)">
+    <video id="video" autoplay playsinline muted></video>
+    <div class="grid"><div></div><div class="gv"></div><div class="gv"></div><div class="gh"></div><div class="gv gh"></div><div class="gv gh"></div><div class="gh"></div><div class="gv gh"></div><div class="gv gh"></div></div>
+    <div class="cr cr-tl"></div><div class="cr cr-tr"></div><div class="cr cr-bl"></div><div class="cr cr-br"></div>
+    <div id="fr"></div>
+    <div class="hud"><div class="htime" id="htime">00:00:00</div><div class="gbadge srch" id="gbadge">GPS…</div></div>
+    <button id="btn-flip" onclick="event.stopPropagation();flipCam()">⟳ Перевернуть</button>
+    <div class="id-badge" id="id-badge"></div>
+    <div class="save-status" id="save-status">✓ Сохранено</div>
+  </div>
+  <div class="cam-bar">
+    <div class="shutter" id="shutter" onclick="shoot()"><div class="disc"></div></div>
+  </div>
+</div>
+
+<canvas id="cv" style="display:none"></canvas>
+
+<script>
+// ══════════════════════════════════════
+//  ЗАГРУЗКА CONFIG.JSON
+// ══════════════════════════════════════
+(async function loadConfig(){
+  try {
+    const r = await fetch('config.json?_='+Date.now());
+    if (!r.ok) throw new Error('not found');
+    const j = await r.json();
+    CFG.SECRET_KEY = j.SECRET_KEY || CFG.SECRET_KEY;
+    CFG.VER        = j.VER        || CFG.VER;
+    // ID клиента: URL параметр имеет приоритет над config.json
+    const urlId = new URLSearchParams(location.search).get('id');
+    CFG.CLIENT_ID = urlId || j.CLIENT_ID || CFG.CLIENT_ID;
+  } catch(e) {
+    console.warn('config.json не найден, используем дефолты');
+    const urlId = new URLSearchParams(location.search).get('id');
+    if (urlId) CFG.CLIENT_ID = urlId;
+  }
+  // Обновляем UI после загрузки конфига
+  document.getElementById('show-id').textContent = CFG.CLIENT_ID;
+  document.getElementById('id-badge').textContent = 'ID: ' + CFG.CLIENT_ID;
+  const btn = document.getElementById('btn-start');
+  btn.disabled = false;
+  btn.innerHTML = '<span>📷</span> Открыть камеру';
+})();
+
+// ══════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════
+let stream=null, facingMode='environment', gps=null, camOk=false;
+const video=document.getElementById('video');
+const shutter=document.getElementById('shutter');
+
+if(/iphone|ipad|ipod/i.test(navigator.userAgent)&&!navigator.standalone)
+  document.getElementById('ios-hint').style.display='block';
+setInterval(()=>{const n=new Date(),el=document.getElementById('htime');if(el)el.textContent=p2(n.getHours())+':'+p2(n.getMinutes())+':'+p2(n.getSeconds());},1000);
+
+// ── СТАРТ ──
+async function onStart(){
+  document.getElementById('btn-start').disabled=true;
+  document.getElementById('btn-start').textContent='Запуск…';
+  await startCam(); startGPS(); show('s-cam');
+}
+
+// ── КАМЕРА ──
+async function startCam(){
+  const pEl=document.getElementById('p-cam');
+  try{
+    if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}
+    stream=await navigator.mediaDevices.getUserMedia({
+      video:{facingMode:{ideal:facingMode},width:{ideal:1920},height:{ideal:1440}},audio:false
+    });
+    video.srcObject=stream;
+    video.setAttribute('playsinline','');
+    video.setAttribute('muted','');
+    await video.play();
+    camOk=true; pEl.textContent='Разрешено'; pEl.className='pstate ok';
+    document.getElementById('btn-flip').style.display='block';
+  }catch(err){
+    camOk=false; pEl.textContent='Отклонено'; pEl.className='pstate no';
+    toast('Разрешите доступ к камере: нажмите 🔒','err');
+  }
+}
+async function flipCam(){facingMode=facingMode==='environment'?'user':'environment';camOk=false;await startCam();}
+
+// ── GPS ──
+function startGPS(){
+  const badge=document.getElementById('gbadge'),pEl=document.getElementById('p-gps');
+  if(!navigator.geolocation){badge.textContent='GPS —';badge.className='gbadge';pEl.textContent='Нет';pEl.className='pstate no';return;}
+  navigator.geolocation.getCurrentPosition(
+    pos=>{gps={lat:pos.coords.latitude.toFixed(5),lon:pos.coords.longitude.toFixed(5)};badge.textContent='⌖ GPS';badge.className='gbadge ok';pEl.textContent='Разрешено';pEl.className='pstate ok';},
+    ()=>{badge.textContent='GPS —';badge.className='gbadge';pEl.textContent='Отклонено';pEl.className='pstate no';},
+    {enableHighAccuracy:true,timeout:15000,maximumAge:0}
+  );
+}
+
+// ── ТАП ФОКУС ──
+function onTap(e){
+  const r=document.getElementById('fr'),rc=document.getElementById('vf').getBoundingClientRect();
+  r.style.left=(e.clientX-rc.left)+'px';r.style.top=(e.clientY-rc.top)+'px';
+  r.classList.remove('show');void r.offsetWidth;r.classList.add('show');
+  setTimeout(()=>r.classList.remove('show'),850);
+}
+
+// ══════════════════════════════════════
+//  СЪЁМКА + АВТО-СОХРАНЕНИЕ
+// ══════════════════════════════════════
+async function shoot(){
+  if(!camOk){toast('Камера не готова','err');return;}
+  const fl=document.getElementById('flash');
+  fl.classList.add('go');setTimeout(()=>fl.classList.remove('go'),140);
+  shutter.classList.add('busy');
+  showL('ОБРАБОТКА…');
+  try{
+    const cv=document.getElementById('cv'),cx=cv.getContext('2d');
+    const W=video.videoWidth||1280,H=video.videoHeight||960;
+    cv.width=W; cv.height=H;
+
+    // Убираем зеркало фронтальной камеры
+    if(facingMode==='user'){
+      cx.save();cx.translate(W,0);cx.scale(-1,1);cx.drawImage(video,0,0,W,H);cx.restore();
+    }else{
+      cx.drawImage(video,0,0,W,H);
+    }
+
+    const gpsStr  = gps ? gps.lat+','+gps.lon : 'NO_GPS';
+    const dateStr = isoNow(new Date());
+    const idAscii = translit(CFG.CLIENT_ID);
+    const payload = idAscii+'|'+dateStr+'|'+gpsStr;
+    const hmac    = await hmacSign(CFG.SECRET_KEY, payload);
+    const qrTxt   = idAscii+'|'+dateStr+'|'+gpsStr+'|'+hmac+'|'+CFG.VER;
+
+    showL('QR-КОД…');
+    stampQR(cx, W, H, qrTxt, dateStr, gpsStr, hmac);
+
+    // ══════════════════════════════════════
+    //  АВТО-СОХРАНЕНИЕ — без диалога
+    // ══════════════════════════════════════
+    cv.toBlob(blob=>{
+      const n=new Date();
+      const fn='VERIFY_'+CFG.CLIENT_ID+'_'+n.getFullYear()+p2(n.getMonth()+1)+p2(n.getDate())+'_'+p2(n.getHours())+p2(n.getMinutes())+p2(n.getSeconds())+'.jpg';
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(blob);
+      a.download=fn;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      // Освобождаем память
+      setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+
+      hideL(); shutter.classList.remove('busy');
+
+      // Показываем статус на экране камеры (не уходим никуда!)
+      const ss=document.getElementById('save-status');
+      ss.classList.add('show');
+      setTimeout(()=>ss.classList.remove('show'),2000);
+    },'image/jpeg',0.93);
+
+  }catch(err){hideL();shutter.classList.remove('busy');toast('Ошибка: '+err.message,'err');console.error(err);}
+}
+
+// ══════════════════════════════════════
+//  QR STAMP — всегда НИЖНИЙ ЛЕВЫЙ УГОЛ
+//  независимо от ориентации (портрет/ландшафт)
+// ══════════════════════════════════════
+function stampQR(cx, W, H, qrTxt, dateStr, gpsStr, hmac){
+  // QR размер: 17% от МЕНЬШЕЙ стороны — одинаков в обеих ориентациях
+  const minSide = Math.min(W, H);
+  const qrSz  = Math.max(Math.round(minSide * 0.17), 90);
+  const mg    = Math.round(minSide * 0.02);
+  const pad   = Math.round(qrSz * 0.1);
+  const fs    = Math.max(Math.round(qrSz * 0.09), 10);
+  const lh    = fs + 5;
+  const bW    = qrSz + pad * 2;
+  const bH    = qrSz + pad * 2 + lh * 3 + pad;
+
+  // НИЖНИЙ ЛЕВЫЙ — bx всегда слева, by всегда снизу
+  const bx = mg;
+  const by = H - mg - bH;
+
+  const cellSz = Math.max(Math.ceil(qrSz / 33), 2);
+  const qrCv   = window.makeQR(qrTxt, cellSz);
+
+  // Тень
+  cx.shadowColor='rgba(0,0,0,.55)';cx.shadowBlur=18;cx.shadowOffsetX=2;cx.shadowOffsetY=2;
+  cx.fillStyle='rgba(255,255,255,.97)';
+  rrect(cx,bx,by,bW,bH,10);cx.fill();
+  cx.shadowColor='transparent';cx.shadowBlur=0;
+
+  cx.drawImage(qrCv,bx+pad,by+pad,qrSz,qrSz);
+
+  const tx=bx+pad; let ty=by+pad+qrSz+fs+3;
+  cx.textAlign='left';
+  cx.fillStyle='#000';cx.font='bold '+fs+'px monospace';
+  cx.fillText(dateStr.replace('T',' ').slice(0,16),tx,ty);ty+=lh;
+  cx.fillStyle='#333';cx.font=fs+'px monospace';
+  cx.fillText(gpsStr==='NO_GPS'?'GPS: —':gpsStr.replace(',',', '),tx,ty);ty+=lh;
+  cx.fillStyle='#888';
+  cx.fillText('SIG: '+hmac.slice(0,12)+'…',tx,ty);
+}
+
+function rrect(cx,x,y,w,h,r){
+  cx.beginPath();cx.moveTo(x+r,y);cx.lineTo(x+w-r,y);cx.quadraticCurveTo(x+w,y,x+w,y+r);
+  cx.lineTo(x+w,y+h-r);cx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  cx.lineTo(x+r,y+h);cx.quadraticCurveTo(x,y+h,x,y+h-r);
+  cx.lineTo(x,y+r);cx.quadraticCurveTo(x,y,x+r,y);cx.closePath();
+}
+
+function show(id){['s-start','s-cam'].forEach(s=>document.getElementById(s).classList.toggle('hidden',s!==id));}
+
+// ── HMAC ──
+async function hmacSign(key,msg){
+  const enc=new TextEncoder();
+  const k=await crypto.subtle.importKey('raw',enc.encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const s=await crypto.subtle.sign('HMAC',k,enc.encode(msg));
+  return Array.from(new Uint8Array(s)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase().slice(0,16);
+}
+function p2(n){return String(n).padStart(2,'0');}
+function isoNow(d){return d.getFullYear()+'-'+p2(d.getMonth()+1)+'-'+p2(d.getDate())+'T'+p2(d.getHours())+':'+p2(d.getMinutes())+':'+p2(d.getSeconds());}
+function showL(t){document.getElementById('ltxt').textContent=t;document.getElementById('loader').classList.add('show');}
+function hideL(){document.getElementById('loader').classList.remove('show');}
+function toast(msg,type){const t=document.getElementById('toast');t.textContent=msg;t.className=type||'';t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}
+
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
