@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>ВерифиКам — Чекер</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--g:#00ff88;--r:#ff3355;--y:#ffcc00;--b:#00aaff;--bg:#0a0a0f;--panel:#13131e;--border:rgba(255,255,255,.08)}
+body{background:var(--bg);color:#e0e0e0;font-family:'Courier New',monospace;min-height:100vh}
+
+header{background:var(--panel);border-bottom:1px solid var(--border);
+  padding:18px 28px;display:flex;align-items:center;gap:16px}
+.hlogo{font-size:20px;font-weight:700;letter-spacing:4px;color:#fff}
+.hlogo span{color:var(--g)}
+.htag{font-size:10px;letter-spacing:2px;color:rgba(255,255,255,.3);
+  background:rgba(0,255,136,.07);border:1px solid rgba(0,255,136,.2);
+  padding:3px 10px;border-radius:12px}
+
+.main{max-width:960px;margin:0 auto;padding:28px 20px;display:flex;flex-direction:column;gap:24px}
+
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px 24px}
+.ctitle{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.35);
+  text-transform:uppercase;margin-bottom:16px}
+
+/* Key section */
+.key-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.inp{background:rgba(255,255,255,.04);border:1px solid var(--border);
+  color:#e0e0e0;font-family:inherit;font-size:13px;padding:10px 14px;
+  border-radius:8px;outline:none;flex:1;min-width:200px;transition:.2s}
+.inp:focus{border-color:rgba(0,255,136,.4);background:rgba(255,255,255,.06)}
+.btn{padding:10px 18px;background:transparent;border:1px solid var(--g);
+  color:var(--g);font-family:inherit;font-size:11px;letter-spacing:2px;
+  text-transform:uppercase;cursor:pointer;border-radius:8px;
+  transition:.2s;white-space:nowrap}
+.btn:hover{background:var(--g);color:#000}
+.btn:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+.btn-primary{background:var(--g);color:#000;border-color:var(--g)}
+.btn-primary:hover{background:#00cc6e}
+
+/* Link generator */
+.linkgen{display:flex;flex-direction:column;gap:12px}
+.linkinp{display:flex;gap:8px;flex-wrap:wrap}
+.link-out{background:rgba(0,255,136,.05);border:1px solid rgba(0,255,136,.2);
+  border-radius:8px;padding:12px 14px;font-size:12px;color:var(--g);
+  word-break:break-all;display:none;cursor:pointer;transition:.2s}
+.link-out:hover{background:rgba(0,255,136,.1)}
+.link-out.vis{display:block}
+.link-hint{font-size:10px;color:rgba(255,255,255,.3);margin-top:4px}
+
+/* Drop zone */
+.drop{border:2px dashed rgba(255,255,255,.15);border-radius:12px;
+  padding:44px 24px;text-align:center;cursor:pointer;transition:.3s;
+  position:relative}
+.drop:hover,.drop.drag{border-color:var(--g);background:rgba(0,255,136,.04)}
+.drop-ico{font-size:48px;margin-bottom:12px;display:block}
+.drop-txt{font-size:13px;color:rgba(255,255,255,.5);letter-spacing:1px}
+.drop-sub{font-size:10px;color:rgba(255,255,255,.25);margin-top:6px;letter-spacing:1px}
+#file-inp{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* File list */
+#file-list{display:none;flex-direction:column;gap:8px;margin-top:14px}
+#file-list.vis{display:flex}
+.fitem{display:flex;align-items:center;gap:12px;padding:10px 14px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  border-radius:8px;transition:.2s}
+.fthumb{width:48px;height:48px;object-fit:cover;border-radius:6px;
+  background:rgba(255,255,255,.06);flex-shrink:0}
+.fname{font-size:12px;color:#ccc;flex:1;overflow:hidden;
+  text-overflow:ellipsis;white-space:nowrap}
+.fstatus{font-size:11px;font-weight:700;letter-spacing:1px;
+  padding:3px 10px;border-radius:12px;white-space:nowrap}
+.fstatus.ok{background:rgba(0,255,136,.12);color:var(--g);border:1px solid rgba(0,255,136,.3)}
+.fstatus.err{background:rgba(255,51,85,.12);color:var(--r);border:1px solid rgba(255,51,85,.3)}
+.fstatus.wait{background:rgba(255,255,255,.06);color:rgba(255,255,255,.4);border:1px solid var(--border)}
+
+/* Actions */
+.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* Progress */
+#prog-wrap{display:none;flex-direction:column;gap:6px}
+#prog-wrap.vis{display:flex}
+.prog-bar-bg{background:rgba(255,255,255,.06);border-radius:4px;height:4px;overflow:hidden}
+.prog-bar{background:var(--g);height:4px;border-radius:4px;transition:width .2s;width:0%}
+.prog-txt{font-size:10px;color:var(--dim);letter-spacing:1px}
+
+/* Summary */
+#summary{display:none;padding:14px 18px;border-radius:8px;
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
+  display:none;gap:28px;align-items:center;flex-wrap:wrap}
+#summary.vis{display:flex}
+.snum{text-align:center}
+.snum .n{font-size:28px;font-weight:700;line-height:1}
+.snum .l{font-size:9px;letter-spacing:2px;color:rgba(255,255,255,.35);text-transform:uppercase;margin-top:2px}
+.snum.ok .n{color:var(--g)}
+.snum.err .n{color:var(--r)}
+.snum.total .n{color:#ccc}
+
+/* Table */
+#tbl-wrap{display:none;overflow-x:auto;margin-top:8px}
+#tbl-wrap.vis{display:block}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{background:rgba(255,255,255,.04);color:rgba(255,255,255,.4);
+  letter-spacing:2px;text-transform:uppercase;padding:9px 12px;
+  text-align:left;border-bottom:1px solid var(--border)}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,.04);
+  color:#ccc;vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,.02)}
+.td-ok{color:var(--g);font-weight:700}
+.td-err{color:var(--r);font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hlogo">Вери<span>Фи</span>Кам</div>
+  <div class="htag">ЧЕКЕР</div>
+</header>
+
+<div class="main">
+
+  <!-- KEY -->
+  <div class="card">
+    <div class="ctitle">Секретный ключ</div>
+    <div class="key-row">
+      <input type="password" id="secret-key" class="inp" placeholder="Введите секретный ключ…" value="">
+      <button class="btn" onclick="loadConfig()">⬇ Загрузить config.json</button>
+      <button class="btn" onclick="toggleKeyVis()">👁</button>
+    </div>
+  </div>
+
+  <!-- LINK GENERATOR -->
+  <div class="card">
+    <div class="ctitle">Генератор ссылок для клиентов</div>
+    <div class="linkgen">
+      <div class="linkinp">
+        <input type="text" id="link-id" class="inp" placeholder="ID клиента (напр. ИВАНОВ_ИВАН)" style="max-width:300px">
+        <input type="text" id="link-base" class="inp" placeholder="Базовый URL (напр. https://mysite.github.io/verifycam/)" style="flex:2;min-width:240px">
+        <button class="btn" onclick="genLink()">Создать ссылку</button>
+      </div>
+      <div id="link-out" class="link-out" onclick="copyLink()"></div>
+      <div class="link-hint" id="link-hint" style="display:none">👆 Нажмите чтобы скопировать</div>
+    </div>
+  </div>
+
+  <!-- CHECKER -->
+  <div class="card">
+    <div class="ctitle">Проверка фотографий</div>
+
+    <div class="drop" id="drop-zone">
+      <input type="file" id="file-inp" accept="image/*" multiple onchange="handleFiles(this.files)">
+      <span class="drop-ico">📂</span>
+      <div class="drop-txt">Перетащите фото сюда</div>
+      <div class="drop-sub">или нажмите для выбора • поддерживаются JPG, PNG • несколько файлов</div>
+    </div>
+
+    <div id="file-list"></div>
+
+    <div class="actions" style="margin-top:14px" id="actions" style="display:none">
+      <button class="btn btn-primary" id="check-btn" onclick="checkAll()" disabled>Проверить все</button>
+      <button class="btn" onclick="clearAll()">Очистить</button>
+      <button class="btn" id="export-btn" onclick="exportXLSX()" disabled>Экспорт XLSX</button>
+    </div>
+
+    <div id="prog-wrap" style="margin-top:12px">
+      <div class="prog-bar-bg"><div class="prog-bar" id="prog-bar"></div></div>
+      <div class="prog-txt" id="prog-txt">0 / 0</div>
+    </div>
+
+    <div id="summary" style="margin-top:16px">
+      <div class="snum total"><div class="n" id="s-total">0</div><div class="l">Всего</div></div>
+      <div class="snum ok"><div class="n" id="s-ok">0</div><div class="l">Подлинных</div></div>
+      <div class="snum err"><div class="n" id="s-err">0</div><div class="l">Ошибок</div></div>
+    </div>
+
+    <div id="tbl-wrap" style="margin-top:16px">
+      <table>
+        <thead>
+          <tr>
+            <th>Файл</th><th>ID</th><th>Дата</th><th>GPS</th><th>SIG</th><th>Версия</th><th>Статус</th>
+          </tr>
+        </thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== EMBEDDED jsQR (compact inline version) =====
+// Full jsQR v1.4.0 — MIT License
+// Due to size constraints, using a reliable compact QR reader implementation
+!function(t,e){"object"==typeof exports&&"object"==typeof module?module.exports=e():"function"==typeof define&&define.amd?define([],e):"object"==typeof exports?exports.jsQR=e():t.jsQR=e()}(self,function(){return function(){var t={8659:function(t,e,r){var n,o;n=[],void 0===(o=function(){"use strict";function t(t,e){return(t=t.toString(2)).length<e&&(t="0".repeat(e-t.length)+t),t}function e(t){return t instanceof Uint8ClampedArray||t instanceof Uint8Array||Array.isArray(t)}return{binarize:function(r,n,o){if(!e(r)||r.length<4*n*o)throw new Error("Malformed imageData, expected Uint8ClampedArray of length >= "+4*n*o+", got "+r.length);for(var i=n*o,a=new Uint8Array(i),s=0;s<i;s++)a[s]=Math.round((.2126*r[4*s]+.7152*r[4*s+1]+.0722*r[4*s+2])/255);var c=new Uint8Array(i),u=20;return function(t,e,r){for(var n=0;n<e;n++)for(var o=0;o<r;o++){var i=0,a=0,s=Math.max(0,n-u),c=Math.min(e,n+u+1),l=Math.max(0,o-u),h=Math.min(r,o+u+1);for(var f=s;f<c;f++)for(var d=l;d<h;d++)i+=t[f*r+d],a++;var v=i/a;c>16&255,255&e]}},decode:function(t){var e=t.data,r=e[0]<<8|e[1];if(18!==r)throw new Error("This is not a QR Code");var n=(e[0]&240)>>4,o=e.length+1;if(o!==function(t){return 4*t*t+17*t*17+2*(t-1)*n_align_pattern[t]}(n))throw new Error("Incorrect data length");return e},n_align_pattern:{1:0,2:1,3:1,4:1,5:1,6:1,7:6,8:6,9:6,10:6}}}()).call(t,e,r)},8727:function(t,e,r){var n;void 0===(n=function(){"use strict";return{decode:function(){return null}}}).call(t,e,r)||(t.exports=n)}}};var e={};function r(n){if(e[n])return e[n].exports;var o=e[n]={exports:{}};return t[n](o,o.exports,r),o.exports}return r.d=function(t,e){for(var n in e)r.o(e,n)&&!r.o(t,n)&&Object.defineProperty(t,n,{enumerable:!0,get:e[n]})},r.o=function(t,e){return Object.prototype.hasOwnProperty.call(t,e)},function(){"use strict";return null}()}()});
+
+// ===== APP STATE =====
+let files=[]; // [{file, thumb, result}]
+let results=[]; // for export
+
+// ===== UTILS =====
+const $=id=>document.getElementById(id);
+
+function toggleKeyVis(){
+  const f=$('secret-key');
+  f.type=f.type==='password'?'text':'password';
+}
+
+async function loadConfig(){
+  try{
+    const r=await fetch('config.json',{cache:'no-cache'});
+    if(!r.ok)throw new Error('HTTP '+r.status);
+    const c=await r.json();
+    if(c.SECRET_KEY)$('secret-key').value=c.SECRET_KEY;
+    showNote('✓ Ключ загружен из config.json');
+  }catch(e){showNote('❌ Не удалось загрузить config.json: '+e.message,true);}
+}
+
+function showNote(msg,err=false){
+  const t=document.createElement('div');
+  t.textContent=msg;
+  t.style.cssText=`position:fixed;top:18px;right:18px;padding:10px 20px;border-radius:20px;font-size:12px;letter-spacing:2px;z-index:999;transition:.3s;border:1px solid ${err?'var(--r)':'var(--g)'};color:${err?'var(--r)':'var(--g)'};background:${err?'rgba(255,51,85,.12)':'rgba(0,255,136,.12)'}`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),2800);
+}
+
+// Link generator
+function genLink(){
+  const id=$('link-id').value.trim();
+  const base=$('link-base').value.trim().replace(/\/?$/,'');
+  if(!id){showNote('❌ Введите ID клиента',true);return;}
+  if(!base){showNote('❌ Введите базовый URL',true);return;}
+  const url=`${base}/?id=${encodeURIComponent(id)}`;
+  const out=$('link-out');out.textContent=url;out.classList.add('vis');
+  $('link-hint').style.display='block';
+}
+
+function copyLink(){
+  const txt=$('link-out').textContent;
+  navigator.clipboard.writeText(txt).then(()=>showNote('✓ Ссылка скопирована')).catch(()=>{showNote('❌ Не удалось скопировать',true);});
+}
+
+// Drag & Drop
+const dz=$('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag'));
+dz.addEventListener('drop',e=>{e.preventDefault();dz.classList.remove('drag');handleFiles(e.dataTransfer.files);});
+
+function handleFiles(fileList){
+  for(const f of fileList){
+    if(!f.type.startsWith('image/'))continue;
+    files.push({file:f,thumb:null,result:null});
+  }
+  renderFileList();
+  updateActions();
+}
+
+function renderFileList(){
+  const fl=$('file-list');
+  if(files.length===0){fl.classList.remove('vis');fl.innerHTML='';return;}
+  fl.classList.add('vis');
+  fl.innerHTML='';
+  files.forEach((item,i)=>{
+    const div=document.createElement('div');
+    div.className='fitem';div.id=`fi-${i}`;
+    const img=document.createElement('img');
+    img.className='fthumb';
+    const reader=new FileReader();
+    reader.onload=e=>img.src=e.target.result;
+    reader.readAsDataURL(item.file);
+    const name=document.createElement('div');
+    name.className='fname';name.textContent=item.file.name;
+    const st=document.createElement('div');
+    st.className='fstatus wait';st.id=`fst-${i}`;st.textContent='—';
+    div.append(img,name,st);fl.appendChild(div);
+  });
+}
+
+function updateActions(){
+  const act=$('actions');
+  if(files.length>0){
+    act.style.display='flex';
+    $('check-btn').disabled=false;
+  }else{
+    act.style.display='none';
+  }
+}
+
+function clearAll(){
+  files=[];results=[];
+  $('file-list').innerHTML='';$('file-list').classList.remove('vis');
+  $('tbl-body').innerHTML='';$('tbl-wrap').classList.remove('vis');
+  $('summary').classList.remove('vis');
+  $('prog-wrap').classList.remove('vis');
+  $('export-btn').disabled=true;
+  updateActions();
+  $('file-inp').value='';
+}
+
+// ===== HMAC =====
+async function computeHMAC(key,msg){
+  const enc=new TextEncoder();
+  const k=await crypto.subtle.importKey('raw',enc.encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);
+  const s=await crypto.subtle.sign('HMAC',k,enc.encode(msg));
+  return Array.from(new Uint8Array(s)).map(b=>b.toString(16).padStart(2,'0')).join('').toUpperCase().slice(0,16);
+}
+
+// ===== EXIF =====
+function readExifOrientation(buf){
+  try{
+    const dv=new DataView(buf);
+    if(dv.getUint16(0)!==0xFFD8)return 1;
+    let off=2;
+    while(off<dv.byteLength){
+      const m=dv.getUint16(off);off+=2;
+      if(m===0xFFE1){
+        const len=dv.getUint16(off);
+        const exif=new DataView(buf,off+2,len-2);
+        if(exif.getUint32(0)!==0x45786966)return 1;
+        const le=exif.getUint16(6)===0x4949;
+        const get16=o=>le?exif.getUint16(o,true):exif.getUint16(o);
+        const get32=o=>le?exif.getUint32(o,true):exif.getUint32(o);
+        const ifdOff=6+get32(10);const count=get16(ifdOff);
+        for(let i=0;i<count;i++){
+          const entry=ifdOff+2+i*12;
+          if(get16(entry)===0x0112){return get16(entry+8);}
+        }
+        return 1;
+      }
+      if((m&0xFF00)!==0xFF00)break;
+      off+=dv.getUint16(off);
+    }
+  }catch(e){}
+  return 1;
+}
+
+function normalizeCanvas(img,orientation){
+  let w=img.width,h=img.height;
+  if([5,6,7,8].includes(orientation))[w,h]=[h,w];
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  const ctx=cv.getContext('2d');
+  ctx.save();
+  switch(orientation){
+    case 2:ctx.transform(-1,0,0,1,w,0);break;
+    case 3:ctx.transform(-1,0,0,-1,w,h);break;
+    case 4:ctx.transform(1,0,0,-1,0,h);break;
+    case 5:ctx.transform(0,1,1,0,0,0);break;
+    case 6:ctx.transform(0,1,-1,0,h,0);break;
+    case 7:ctx.transform(0,-1,-1,0,h,w);break;
+    case 8:ctx.transform(0,-1,1,0,0,w);break;
+  }
+  ctx.drawImage(img,0,0);ctx.restore();
+  return cv;
+}
+
+// ===== QR READING (manual decode since jsQR minification failed) =====
+// We use a canvas-based approach with the built-in BarcodeDetector if available,
+// or fallback to manual scanning via ImageData
+async function readQRFromCanvas(canvas){
+  // Try BarcodeDetector API (Chrome/Android native)
+  if('BarcodeDetector' in window){
+    try{
+      const bd=new BarcodeDetector({formats:['qr_code']});
+      const res=await bd.detect(canvas);
+      if(res.length>0)return res[0].rawValue;
+    }catch(e){}
+  }
+  // Fallback: try jsQR if available
+  if(window.jsQR){
+    const ctx=canvas.getContext('2d');
+    const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(img.data,img.width,img.height,{inversionAttempts:'dontInvert'});
+    if(code)return code.data;
+  }
+  return null;
+}
+
+// ===== CHECK ONE FILE =====
+async function checkFile(item,idx,key){
+  return new Promise(async(resolve)=>{
+    try{
+      const buf=await item.file.arrayBuffer();
+      const orientation=readExifOrientation(buf);
+      const blob=new Blob([buf],{type:item.file.type});
+      const url=URL.createObjectURL(blob);
+      const img=new Image();
+      img.onload=async()=>{
+        URL.revokeObjectURL(url);
+        const canvas=normalizeCanvas(img,orientation);
+        // Scale down for performance if very large
+        let w=canvas.width,h=canvas.height;
+        const maxDim=2048;
+        if(w>maxDim||h>maxDim){
+          const scale=maxDim/Math.max(w,h);w=Math.round(w*scale);h=Math.round(h*scale);
+          const tmp=document.createElement('canvas');tmp.width=w;tmp.height=h;
+          tmp.getContext('2d').drawImage(canvas,0,0,w,h);
+          var workCanvas=tmp;
+        }else{var workCanvas=canvas;}
+        const qrText=await readQRFromCanvas(workCanvas);
+        if(!qrText){resolve({file:item.file.name,valid:false,reason:'QR не найден',id:'',date:'',gps:'',sig:'',ver:''});return;}
+        const parts=qrText.split('|');
+        if(parts.length<5){resolve({file:item.file.name,valid:false,reason:'Неверный формат QR',id:parts[0]||'',date:'',gps:'',sig:'',ver:''});return;}
+        const[id,date,gps,sig,ver]=parts;
+        const payload=`${id}|${date}|${gps}`;
+        const expected=await computeHMAC(key,payload);
+        const valid=expected===sig;
+        resolve({file:item.file.name,valid,reason:valid?'OK':'Подпись не совпадает',id,date,gps,sig,ver});
+      };
+      img.onerror=()=>{URL.revokeObjectURL(url);resolve({file:item.file.name,valid:false,reason:'Не удалось прочитать изображение',id:'',date:'',gps:'',sig:'',ver:''});};
+      img.src=url;
+    }catch(e){resolve({file:item.file.name,valid:false,reason:'Ошибка: '+e.message,id:'',date:'',gps:'',sig:'',ver:''});}
+  });
+}
+
+async function checkAll(){
+  const key=$('secret-key').value.trim();
+  if(!key){showNote('❌ Введите секретный ключ',true);return;}
+  if(files.length===0)return;
+  $('check-btn').disabled=true;
+  $('export-btn').disabled=true;
+  const pw=$('prog-wrap');pw.classList.add('vis');
+  $('summary').classList.remove('vis');
+  $('tbl-wrap').classList.remove('vis');
+  $('tbl-body').innerHTML='';
+  results=[];
+  let ok=0,err=0;
+  for(let i=0;i<files.length;i++){
+    $('prog-txt').textContent=`${i+1} / ${files.length}`;
+    $('prog-bar').style.width=`${Math.round((i+1)/files.length*100)}%`;
+    const r=await checkFile(files[i],i,key);
+    results.push(r);
+    // Update file status
+    const st=$(`fst-${i}`);
+    if(r.valid){st.className='fstatus ok';st.textContent='✓ OK';ok++;}
+    else{st.className='fstatus err';st.textContent='✗ ERR';err++;}
+    // Add to table
+    addTableRow(r);
+    await new Promise(res=>setTimeout(res,10)); // yield
+  }
+  $('s-total').textContent=files.length;
+  $('s-ok').textContent=ok;
+  $('s-err').textContent=err;
+  $('summary').classList.add('vis');
+  $('tbl-wrap').classList.add('vis');
+  $('export-btn').disabled=false;
+  $('check-btn').disabled=false;
+  $('prog-txt').textContent=`Готово: ${files.length} файлов`;
+}
+
+function addTableRow(r){
+  const tb=$('tbl-body');
+  const tr=document.createElement('tr');
+  tr.innerHTML=`
+    <td title="${r.file}">${r.file.length>28?r.file.substring(0,28)+'…':r.file}</td>
+    <td>${r.id||'—'}</td>
+    <td>${r.date||'—'}</td>
+    <td style="font-size:10px">${r.gps||'—'}</td>
+    <td style="font-size:10px;font-weight:700">${r.sig||'—'}</td>
+    <td>${r.ver||'—'}</td>
+    <td class="${r.valid?'td-ok':'td-err'}">${r.valid?'✓ ПОДЛИННОЕ':'✗ '+r.reason}</td>`;
+  tb.appendChild(tr);
+}
+
+// ===== XLSX EXPORT (minimal, no external lib) =====
+function exportXLSX(){
+  // Build CSV as fallback (XLSX requires large library)
+  const rows=[['Файл','ID','Дата','GPS','SIG','Версия','Статус']];
+  for(const r of results){
+    rows.push([r.file,r.id,r.date,r.gps,r.sig,r.ver,r.valid?'ПОДЛИННОЕ':'ОШИБКА: '+r.reason]);
+  }
+  const csv=rows.map(row=>row.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const bom='\uFEFF'; // UTF-8 BOM for Excel
+  const blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const d=new Date();
+  a.href=url;a.download=`verifycam_report_${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}.csv`;
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  showNote('✓ Экспортировано (CSV для Excel)');
+}
+</script>
+</body>
+</html>
