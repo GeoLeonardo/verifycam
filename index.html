@@ -23,7 +23,7 @@ html, body {
   touch-action:none;
   -webkit-tap-highlight-color:transparent;
 }
-
+ 
 /* ── LOADING ── */
 #scr-load {
   position:fixed; inset:0; background:#000; z-index:200;
@@ -43,7 +43,7 @@ html, body {
   font-size:10px; letter-spacing:2.5px; color:var(--dim);
   text-transform:uppercase; min-height:14px; text-align:center;
 }
-
+ 
 /* ── ERROR ── */
 #scr-err {
   position:fixed; inset:0; background:#07070f; z-index:190;
@@ -61,7 +61,7 @@ html, body {
   text-transform:uppercase; cursor:pointer; transition:.2s; margin-top:4px;
 }
 .pill-btn:active { background:var(--green); color:#000; }
-
+ 
 /* ── GPS MODAL ── */
 #gps-modal {
   position:fixed; inset:0; background:rgba(0,0,0,.95); z-index:80;
@@ -73,7 +73,7 @@ html, body {
 .gps-modal-ico   { font-size:60px; }
 .gps-modal-title { font-size:17px; font-weight:700; letter-spacing:2px; color:var(--red); }
 .gps-modal-text  { font-size:11px; line-height:2; color:var(--dim); max-width:290px; }
-
+ 
 /* ═══════════════════════════════════════════════════
    CAMERA SCREEN
    Відео — просто займає весь екран через object-fit.
@@ -85,13 +85,13 @@ html, body {
   position:fixed; inset:0; background:#000;
   display:none;
 }
-
+ 
 #video {
   position:fixed; inset:0;
   width:100%; height:100%;
   object-fit:cover; z-index:1;
 }
-
+ 
 /* Сітка — теж абсолютна всередині #scr-cam, не крутиться */
 #vf {
   position:fixed; inset:0; z-index:2; pointer-events:none;
@@ -106,13 +106,13 @@ html, body {
 .c-tr { top:8%;    right:5%; border-width:2px 2px 0 0; }
 .c-bl { bottom:20%; left:5%;  border-width:0 0 2px 2px; }
 .c-br { bottom:20%; right:5%; border-width:0 2px 2px 0; }
-
+ 
 /* ═══════════════════════════════════════════════════
    ВСІ UI ЕЛЕМЕНТИ — position:fixed
    Вони НІКОЛИ не повертаються незалежно від орієнтації.
    Ні веб, ні PWA — жодної трансформації.
 ═══════════════════════════════════════════════════ */
-
+ 
 /* Годинник — top-left */
 #hud {
   position:fixed; top:0; left:0; right:0; z-index:10;
@@ -125,7 +125,7 @@ html, body {
   font-size:16px; font-weight:700; letter-spacing:1px;
   text-shadow:0 1px 4px rgba(0,0,0,.9);
 }
-
+ 
 /* GPS бейдж — fixed, над кнопками по центру */
 #gps-badge {
   position:fixed; z-index:10;
@@ -150,7 +150,7 @@ html, body {
   animation:pulse .55s ease-in-out infinite;
 }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.2} }
-
+ 
 /* Client ID — fixed */
 #cid-label {
   position:fixed; z-index:10;
@@ -160,7 +160,7 @@ html, body {
   color:rgba(255,255,255,.35); text-transform:uppercase;
   pointer-events:none;
 }
-
+ 
 /* Zoom slider — fixed */
 #zoom-row {
   position:fixed; z-index:10;
@@ -181,7 +181,7 @@ html, body {
   width:16px; height:16px; border-radius:50%;
   background:var(--green); cursor:pointer;
 }
-
+ 
 /* ── ПАНЕЛЬ УПРАВЛІННЯ — fixed, завжди знизу ── */
 #controls {
   position:fixed; bottom:0; left:0; right:0; z-index:10;
@@ -199,7 +199,7 @@ html, body {
 .ic-btn:active  { transform:scale(.85); background:rgba(255,255,255,.22); }
 .ic-btn:disabled { opacity:.28; pointer-events:none; }
 .ic-btn.torch-on { background:rgba(255,193,7,.2); border-color:var(--yellow); color:var(--yellow); }
-
+ 
 /* Кнопка затвора */
 #shutter {
   width:80px; height:80px; border-radius:50%;
@@ -218,7 +218,7 @@ html, body {
 #shutter:active  { transform:scale(.9); }
 #shutter:disabled { opacity:.28; pointer-events:none; }
 #shutter.no-gps::after { background:var(--red); }
-
+ 
 /* Flash */
 #flash {
   position:fixed; inset:0; background:#fff;
@@ -226,7 +226,7 @@ html, body {
   transition:opacity .1s;
 }
 #flash.pop { opacity:1; }
-
+ 
 /* Toast */
 #toast {
   position:fixed;
@@ -238,7 +238,7 @@ html, body {
   opacity:0; transition:.28s; z-index:70; pointer-events:none;
 }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-
+ 
 /* Кнопка встановлення — іконка додатку */
 #btn-install {
   position:fixed; top:8px; right:10px; z-index:75;
@@ -252,14 +252,14 @@ html, body {
 </style>
 </head>
 <body>
-
+ 
 <!-- LOADING -->
 <div id="scr-load">
   <div class="brand">Verify<em>Cam</em></div>
   <div class="ring"></div>
   <div id="load-step">Ініціалізація…</div>
 </div>
-
+ 
 <!-- ERROR -->
 <div id="scr-err">
   <div class="err-icon" id="err-icon">⚠️</div>
@@ -267,7 +267,7 @@ html, body {
   <div class="err-body"  id="err-body"></div>
   <button class="pill-btn" onclick="retryInit()">↺ Повторити</button>
 </div>
-
+ 
 <!-- GPS MODAL -->
 <div id="gps-modal">
   <div class="gps-modal-ico">📡</div>
@@ -281,7 +281,7 @@ html, body {
   </div>
   <button class="pill-btn" onclick="retryGPS()">↺ Повторити GPS</button>
 </div>
-
+ 
 <!-- CAMERA: тільки відео + сітка -->
 <div id="scr-cam">
   <video id="video" autoplay playsinline muted></video>
@@ -292,7 +292,7 @@ html, body {
     <div class="cor c-bl"></div><div class="cor c-br"></div>
   </div>
 </div>
-
+ 
 <!-- FIXED UI — ніколи не повертається -->
 <div id="hud"><span id="clock">00:00:00</span></div>
 <span id="gps-badge" class="searching">⌖ GPS…</span>
@@ -306,14 +306,14 @@ html, body {
   <button id="shutter" onclick="shoot()" disabled></button>
   <button class="ic-btn" onclick="flipCam()">⟳</button>
 </div>
-
+ 
 <div id="flash"></div>
 <div id="toast"></div>
 <button id="btn-install" onclick="doInstall()" title="Встановити VerifyCam">
   <img id="install-icon" src="" alt="">
 </button>
 <canvas id="cv" style="display:none"></canvas>
-
+ 
 <script>
 /* QR CODE LIBRARY — nayuki qrcodegen (MIT) */
 /*
@@ -1154,15 +1154,15 @@ var qrcodegen;
     })(QrSegment = qrcodegen.QrSegment || (qrcodegen.QrSegment = {}));
 })(qrcodegen || (qrcodegen = {}));
 if(typeof window!=="undefined")window.qrcodegen=qrcodegen;
-
-
+ 
+ 
 /* VERIFYCAM APP */
-
+ 
 var ICON_DATA_URL = "data:image/png;base64,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";
 var ICON_IMG = new Image();
 ICON_IMG.src = ICON_DATA_URL;
 document.getElementById("install-icon").src = ICON_DATA_URL;
-
+ 
 var CFG       = { SECRET_KEY:"DEFAULT_KEY", CLIENT_ID:"CLIENT_001", VER:"1.0" };
 var gpsCoords = null;
 var gpsStatus = "searching";
@@ -1172,11 +1172,11 @@ var camFacing = "environment";
 var torchOn   = false;
 var torchOK   = false;
 var pwaEvent  = null;
-
+ 
 function g(id){ return document.getElementById(id); }
 function p2(n){ return String(n).padStart(2,"0"); }
 function setStep(t){ g("load-step").textContent = t; }
-
+ 
 function showError(icon,head,body){
   g("scr-load").style.display="none";
   g("scr-cam").style.display="none";
@@ -1190,12 +1190,12 @@ function retryInit(){
   g("scr-load").style.display="flex";
   appInit();
 }
-
+ 
 function toast(msg,ms){
   var t=g("toast"); t.textContent=msg; t.classList.add("show");
   setTimeout(function(){ t.classList.remove("show"); },ms||2400);
 }
-
+ 
 function tickClock(){
   var d=new Date();
   g("clock").textContent=p2(d.getHours())+":"+p2(d.getMinutes())+":"+p2(d.getSeconds());
@@ -1205,7 +1205,7 @@ function nowISO(){
   return d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+
          "T"+p2(d.getHours())+":"+p2(d.getMinutes())+":"+p2(d.getSeconds());
 }
-
+ 
 // Translit RU + UA
 var TR = {
   "А":"A","Б":"B","В":"V","Г":"G","Д":"D","Е":"E","Ё":"YO","Ж":"ZH","З":"Z",
@@ -1221,14 +1221,14 @@ var TR = {
 function translit(s){
   return s.split("").map(function(c){ return TR[c]!==undefined?TR[c]:c; }).join("");
 }
-
+ 
 async function hmac(key,msg){
   var enc=new TextEncoder();
   var k=await crypto.subtle.importKey("raw",enc.encode(key),{name:"HMAC",hash:"SHA-256"},false,["sign"]);
   var s=await crypto.subtle.sign("HMAC",k,enc.encode(msg));
   return Array.from(new Uint8Array(s)).map(function(b){ return b.toString(16).padStart(2,"0"); }).join("").toUpperCase().slice(0,16);
 }
-
+ 
 // GPS
 function applyGPS(){
   var badge=g("gps-badge"),shutter=g("shutter"),modal=g("gps-modal");
@@ -1263,7 +1263,7 @@ function retryGPS(){
   if(gpsWatch!==null){ navigator.geolocation.clearWatch(gpsWatch); gpsWatch=null; }
   gpsStatus="searching"; applyGPS(); startGPS();
 }
-
+ 
 // Camera
 async function startCam(){
   try{
@@ -1286,7 +1286,7 @@ async function startCam(){
       "Дозвольте доступ до камери.\n\nChrome: адресний рядок → 🔒 → Камера → Дозволити\n\nПотім натисніть «Повторити»");
   }
 }
-
+ 
 function setupCaps(){
   var track=camStream&&camStream.getVideoTracks()[0]; if(!track)return;
   var caps=track.getCapabilities?track.getCapabilities():{};
@@ -1305,7 +1305,7 @@ function setupCaps(){
     };
   } else { zr.classList.remove("on"); }
 }
-
+ 
 function toggleTorch(){
   if(!torchOK){ toast("⚡ Ліхтарик не підтримується"); return; }
   var track=camStream.getVideoTracks()[0]; torchOn=!torchOn;
@@ -1316,7 +1316,7 @@ function flipCam(){
   camFacing=camFacing==="environment"?"user":"environment";
   torchOn=false; g("btn-torch").classList.remove("torch-on"); startCam();
 }
-
+ 
 // roundRect polyfill
 function rRect(ctx,x,y,w,h,r){
   if(typeof ctx.roundRect==="function"){ ctx.beginPath(); ctx.roundRect(x,y,w,h,r); }
@@ -1328,14 +1328,14 @@ function rRect(ctx,x,y,w,h,r){
     ctx.lineTo(x,y+r); ctx.arcTo(x,y,x+r,y,r); ctx.closePath();
   }
 }
-
+ 
 // Paint QR — завжди bottom-left canvas
 function paintQR(ctx,qrText,CW,CH,dateStr,gpsStr,sig){
   var QC; try{ QC=qrcodegen.QrCode; if(!QC)throw 0; }
   catch(e){ _qrErr(ctx,CW,CH,"lib unavailable"); return; }
   var qr; try{ qr=QC.encodeText(qrText,QC.Ecc.MEDIUM); }
   catch(e){ _qrErr(ctx,CW,CH,"encode: "+e.message.slice(0,20)); return; }
-
+ 
   var S=Math.min(CW,CH);
   var QSZ=Math.max(130,Math.round(S*0.185));
   var MG=Math.round(S*0.024);
@@ -1346,7 +1346,7 @@ function paintQR(ctx,qrText,CW,CH,dateStr,gpsStr,sig){
   var BX=MG, BY=CH-CRDH-MG;
   var QX=BX+PAD, QY=BY+PAD;
   var CELL=QSZ/qr.size;
-
+ 
   // Shadow + white card
   ctx.save();
   ctx.shadowColor="rgba(0,0,0,.6)"; ctx.shadowBlur=22;
@@ -1354,7 +1354,7 @@ function paintQR(ctx,qrText,CW,CH,dateStr,gpsStr,sig){
   ctx.fillStyle="#fff"; rRect(ctx,BX,BY,CRDW,CRDH,10); ctx.fill();
   ctx.restore();
   ctx.fillStyle="#ffffff"; rRect(ctx,BX,BY,CRDW,CRDH,10); ctx.fill();
-
+ 
   // QR modules
   ctx.fillStyle="#111111";
   for(var row=0;row<qr.size;row++){
@@ -1367,19 +1367,19 @@ function paintQR(ctx,qrText,CW,CH,dateStr,gpsStr,sig){
       }
     }
   }
-
+ 
   // Логотип в центрі QR — іконка в повному крузі
   var LS=Math.round(QSZ*0.26);
   var LCX=Math.round(QX+QSZ/2);  // center X
   var LCY=Math.round(QY+QSZ/2);  // center Y
   var LR=Math.round(LS/2);       // radius
-
+ 
   // Білий круг-підкладка (трохи більший)
   ctx.fillStyle="#ffffff";
   ctx.beginPath();
   ctx.arc(LCX, LCY, LR+4, 0, Math.PI*2);
   ctx.fill();
-
+ 
   // Clip в коло і малюємо іконку — коло НЕ обрізається
   ctx.save();
   ctx.beginPath();
@@ -1396,7 +1396,7 @@ function paintQR(ctx,qrText,CW,CH,dateStr,gpsStr,sig){
     ctx.fillText("V", LCX, LCY+1);
   }
   ctx.restore();
-
+ 
   // Підпис під QR
   ctx.textAlign="left"; ctx.textBaseline="top";
   ctx.fillStyle="#333333"; ctx.font=LH+"px monospace";
@@ -1412,7 +1412,7 @@ function _qrErr(ctx,CW,CH,msg){
   ctx.textBaseline="top"; ctx.textAlign="left";
   ctx.fillText("QR ERROR:",18,CH-78); ctx.fillText(msg,18,CH-58);
 }
-
+ 
 // ─────────────────────────────────────────────────────────
 // SHOOT — знімаємо кадр з урахуванням повороту пристрою
 //
@@ -1435,24 +1435,24 @@ function getDeviceAngle(){
   }
   return 0;
 }
-
+ 
 async function shoot(){
   if(gpsStatus!=="active"||!gpsCoords){
     toast("❌ Немає GPS — зйомка неможлива"); return;
   }
   var fl=g("flash"); fl.classList.add("pop");
   setTimeout(function(){ fl.classList.remove("pop"); },130);
-
+ 
   var vid=g("video");
   var VW=vid.videoWidth, VH=vid.videoHeight;
   if(!VW||!VH){ toast("❌ Камера ще не готова"); return; }
-
+ 
   // Знімаємо сирий кадр з сенсора у temp canvas
   var raw=document.createElement("canvas");
   raw.width=VW; raw.height=VH;
   var rc=raw.getContext("2d");
   rc.setTransform(1,0,0,1,0,0);
-
+ 
   if(camFacing==="user"){
     // Фронтальна — прибираємо дзеркало
     rc.setTransform(-1,0,0,1,VW,0);
@@ -1461,19 +1461,19 @@ async function shoot(){
   } else {
     rc.drawImage(vid,0,0,VW,VH);
   }
-
+ 
   // Визначаємо кут і повертаємо фінальний canvas
   var angle=getDeviceAngle();
   var FW, FH;
   // При 90 або 270 — розміри міняються місцями
   if(angle===90||angle===270){ FW=VH; FH=VW; }
   else { FW=VW; FH=VH; }
-
+ 
   var cv=g("cv");
   cv.width=FW; cv.height=FH;
   var ctx=cv.getContext("2d");
   ctx.setTransform(1,0,0,1,0,0);
-
+ 
   // Повертаємо зображення
   if(angle===90){
     ctx.translate(FW,0); ctx.rotate(Math.PI/2);
@@ -1483,10 +1483,10 @@ async function shoot(){
     ctx.translate(0,FH); ctx.rotate(-Math.PI/2);
   }
   ctx.drawImage(raw,0,0,VW,VH);
-
+ 
   // Скидаємо трансформацію перед малюванням QR
   ctx.setTransform(1,0,0,1,0,0);
-
+ 
   // Дані
   var now=new Date();
   var dateStr=nowISO();
@@ -1495,22 +1495,22 @@ async function shoot(){
   var payload=id+"|"+dateStr+"|"+gpsStr;
   var sig="NOSIG";
   try{ sig=await hmac(CFG.SECRET_KEY,payload); }catch(e){ console.error("[VC] HMAC:",e); }
-
+ 
   var qrText=id+"|"+dateStr+"|"+gpsStr+"|"+sig+"|"+CFG.VER;
   console.log("[VC] qrText:",qrText,"angle:",angle,"canvas:",FW+"x"+FH);
-
+ 
   // Малюємо QR — після ctx.setTransform(1,0,0,1,0,0) координати чисті
   paintQR(ctx,qrText,FW,FH,dateStr,gpsStr,sig);
-
+ 
   var blob=await new Promise(function(resolve){
     cv.toBlob(function(b){ resolve(b); },"image/jpeg",0.95);
   });
   if(!blob){ toast("❌ Помилка збереження"); return; }
-
+ 
   var fn="VERIFY_"+CFG.CLIENT_ID+"_"+
          now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate())+
          "_"+p2(now.getHours())+p2(now.getMinutes())+p2(now.getSeconds())+".jpg";
-
+ 
   var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)&&!window.MSStream;
   if(isIOS){
     window.open(URL.createObjectURL(blob),"_blank");
@@ -1524,7 +1524,7 @@ async function shoot(){
     toast("✓ Збережено");
   }
 }
-
+ 
 // PWA
 window.addEventListener("beforeinstallprompt",function(e){
   e.preventDefault(); pwaEvent=e; g("btn-install").classList.add("on");
@@ -1534,7 +1534,7 @@ async function doInstall(){
   pwaEvent.prompt(); await pwaEvent.userChoice;
   pwaEvent=null; g("btn-install").classList.remove("on");
 }
-
+ 
 // Init
 async function appInit(){
   try{
@@ -1565,4 +1565,3 @@ document.addEventListener("DOMContentLoaded",appInit);
 </script>
 </body>
 </html>
-fix: video position fixed
