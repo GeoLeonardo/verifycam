@@ -1,5 +1,5 @@
-// ВерифиКам Service Worker v1.0
-const CACHE = 'verifycam-v1';
+// VerifyCam Service Worker v2 — примусово очищає старий кеш
+const CACHE = 'verifycam-v2';  // <-- змінили версію з v1 на v2
 const ALWAYS_CACHE = ['index.html','manifest.json','icon.png'];
 const NETWORK_FIRST = ['config.json'];
 
@@ -9,16 +9,20 @@ self.addEventListener('install', e => {
       .then(c => c.addAll(ALWAYS_CACHE))
       .catch(() => {})
   );
-  self.skipWaiting();
+  self.skipWaiting(); // одразу активуємося
 });
 
 self.addEventListener('activate', e => {
   e.waitUntil(
+    // Видаляємо ВСІ старі кеші (v1 та інші)
     caches.keys().then(keys =>
-      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+      Promise.all(keys.filter(k => k !== CACHE).map(k => {
+        console.log('[SW] Deleting old cache:', k);
+        return caches.delete(k);
+      }))
     )
   );
-  self.clients.claim();
+  self.clients.claim(); // одразу контролюємо всі вкладки
 });
 
 self.addEventListener('fetch', e => {
